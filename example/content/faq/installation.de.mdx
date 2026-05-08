@@ -1,0 +1,30 @@
+---
+title: Installation
+description: bundoc installieren.
+sidebar:
+  order: 1
+---
+
+# Installation
+
+bundoc ist ein einzelnes CLI. Zum Projekt hinzufügen:
+
+```bash
+bun add -d bundoc
+```
+
+## Projekt einrichten
+
+bundoc erwartet eine `bundoc.config.ts`, ein `content/`-Verzeichnis und ein `theme/`-Verzeichnis.
+
+| Pfad | Zweck |
+| --- | --- |
+| `bundoc.config.ts` | Sprachen, Pfade |
+| `content/` | Deine MDX-Dateien |
+| `theme/index.tsx` | Dein React-Theme |
+
+Dev-Server starten:
+
+```bash
+bunx bundoc dev
+```

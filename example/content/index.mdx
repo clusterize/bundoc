@@ -1,0 +1,30 @@
+---
+title: bundoc
+description: A Bun-native CLI for MDX docs sites.
+sidebar:
+  order: 0
+---
+
+# bundoc
+
+A **Bun-native** CLI for MDX documentation sites, where the *content* is `.mdx` and the *theme* is a user-owned React app.
+
+## What you get
+
+- File-system-routed MDX in a `content/` directory.
+- Built-in i18n via `<name>.<locale>.mdx` filename suffix.
+- A user-supplied theme that consumes routing via hooks.
+
+## Quick start
+
+```bash
+bunx bundoc dev
+```
+
+That's it. Edit any `.mdx` file in `content/` and the page hot-reloads.
+
+## Why
+
+Most docs frameworks ship a theme. bundoc ships the *plumbing* — you ship the
+theme. If you want to tweak how a heading renders, change your `mdx-components.tsx`.
+If you want a sidebar, write the sidebar.

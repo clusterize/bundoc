@@ -1,0 +1,16 @@
+{
+  "name": "bundoc-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bundoc dev",
+    "build": "bundoc build",
+    "preview": "bundoc preview"
+  },
+  "dependencies": {
+    "bundoc": "file:..",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
