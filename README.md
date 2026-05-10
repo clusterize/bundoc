@@ -1,8 +1,8 @@
 # bundoc
 
-A Bun-native CLI for MDX documentation sites, where the *content* is `.mdx`
-and the *theme* is a user-owned React app. bundoc supplies the content
-pipeline, router, search index, and a set of hooks; the theme renders.
+A Bun-native CLI for MDX documentation sites. The *content* is `.mdx`,
+the *theme* is your React app. bundoc supplies the content pipeline,
+router, search, and a small set of hooks; you ship the theme.
 
 ## Quick start
 
@@ -13,102 +13,58 @@ bun install
 bunx bundoc dev
 ```
 
+That scaffolds `bundoc.config.ts`, `content/`, and `theme/`, then
+serves the dev site with HMR at `http://localhost:3000`.
+
 ## Commands
 
-- `bundoc dev` — dev server with HMR
-- `bundoc build` — emit a static `dist/`
-- `bundoc preview` — serve `dist/` with SPA fallback
-- `bundoc init <dir>` — scaffold a new site
+| Command | What it does |
+|---------|--------------|
+| `bundoc dev` | Dev server with HMR. |
+| `bundoc build` | Static site to `dist/`. |
+| `bundoc preview` | Serve `dist/` with SPA fallback. |
+| `bundoc init <dir>` | Scaffold a new project. |
 
-## Project layout
+## What's in the box
 
-```
-my-docs/
-├── bundoc.config.ts        # locales, defaultLocale, paths
-├── content/                # MDX files
-│   ├── index.mdx           # → /
-│   ├── index.de.mdx        # → /de
-│   └── faq/
-│       ├── _meta.json      # ordering/labels
-│       └── installation.mdx
-└── theme/
-    ├── index.tsx           # default-export <App/>
-    └── mdx-components.tsx  # optional: MDX tag overrides
-```
+- **MDX content pipeline** — frontmatter, GFM, headings/TOC extraction.
+- **File-system routing** with `_meta.json` overrides for ordering and
+  labels, plus `<Link>` for locale-aware navigation.
+- **i18n** via `<name>.<locale>.mdx` filename suffix, with automatic
+  default-locale fallback.
+- **Build-time search** — Orama BM25 + typo tolerance, one ~25 KB
+  index per locale, fully offline.
+- **Optional Shiki highlighting** with dual-theme CSS variables
+  (`mdx.highlighting` in the config).
+- **bunfig.toml plugins** — `[serve.static].plugins` apply to both
+  `bundoc dev` and `bundoc build`.
 
-## Theme contract
+## Documentation
 
-The theme imports hooks from `bundoc/theme`:
+The full docs live in [`docs/`](./docs) and are themselves a bundoc
+site. To run them locally:
 
-```tsx
-import {
-  PageOutlet,
-  Link,
-  useNav,
-  useLocale,
-  useCurrentPage,
-  useTOC,
-  useSearchIndex,
-} from "bundoc/theme";
+```bash
+cd docs
+bun install
+bunx bundoc dev
 ```
 
-bundoc owns the router; the theme owns rendering. See `docs/` for a
-complete reference, including a Tailwind v4 layout and a ⌘K command palette.
+Topics covered:
 
-## Search
-
-bundoc ships build-time, fully-offline search powered by [Orama](https://docs.orama.com).
-For each locale, it walks the MDX, extracts plaintext (one searchable row per
-heading-section, with rehype-slug-compatible anchor ids), builds an Orama
-index with BM25 + typo tolerance, and persists it to disk:
-
-- **Dev**: served at `/_bundoc/search/<locale>.bin`.
-- **Build**: copied into `dist/_bundoc/search/<locale>.bin` so the static
-  output remains CDN-deployable. No server runtime required.
-
-The theme drives the UX through `useSearchIndex()`, which lazy-fetches the
-current locale's index, restores it client-side, and returns a `query` function:
-
-```tsx
-import { useSearchIndex } from "bundoc/theme";
-
-function CommandPalette() {
-  const { query, loading, error } = useSearchIndex();
-  const [hits, setHits] = useState<SearchHit[]>([]);
-  // call query("term", { limit: 8, tolerance: 1 }) and render hits
-}
-```
-
-Each hit is `{ route, locale, title, heading, anchor, text, score }` — link
-to `${route}#${anchor}` for a deep-link to the matching section.
-
-The docs theme's `SearchPalette.tsx` is a ~150-line reference: ⌘K to open,
-arrow-key navigation, debounced query, locale-aware `Link` for selection.
-
-## bunfig.toml integration
-
-If your theme needs build-time plugins (e.g. Tailwind via
-`bun-plugin-tailwind`), declare them in your project's `bunfig.toml`:
-
-```toml
-[serve.static]
-plugins = ["bun-plugin-tailwind"]
-```
-
-bundoc loads the same plugin list for both `bundoc dev` and `bundoc build`,
-so dev and the static output stay in sync.
+- [Installation and project structure](./docs/content/getting-started/)
+- [Writing content, routing, i18n](./docs/content/guides/)
+- [API: hooks, components, CLI, config](./docs/content/api/)
+- [Frontmatter, _meta.json, roadmap](./docs/content/reference/)
 
 ## Status
 
-v1 ships:
+bundoc is pre-1.0. The hooks documented in
+[`docs/content/api/hooks.mdx`](./docs/content/api/hooks.mdx) are
+stable; internals are not. The deferred work is listed in
+[`docs/content/reference/roadmap.mdx`](./docs/content/reference/roadmap.mdx)
+and `PLAN.md`.
 
-- CSR with i18n (`<name>.<locale>.mdx`), default-locale fallback
-- MDX: frontmatter, headings/TOC extraction, GFM
-- File-system routing, locale-aware navigation, prev/next, code-splitting
-- Build-time search index per locale (BM25 + typo) — fully offline
-- bunfig.toml plugin loader so `bundoc build` honours `[serve.static].plugins`
+## License
 
-Deferred: SSR/SSG (architecture leaves room — see PLAN §11), syntax
-highlighting (theme owns it via `pre`/`code` overrides), vector/semantic
-search (`search.semantic.embedder` config opt-in is the planned shape),
-plugin/remark-rehype config exposure.
+MIT — see `LICENSE` (when added).
