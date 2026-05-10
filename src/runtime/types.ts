@@ -24,6 +24,8 @@ export type NavNode = {
   order: number;
   children: NavNode[];
   fallback?: boolean;
+  /** Raw filesystem segment (internal lookup key). */
+  seg?: string;
 };
 
 export type Manifest = {

@@ -28,6 +28,11 @@ export type NavNode = {
   children: NavNode[];
   /** True if this node is the current locale (filled at lookup time). */
   fallback?: boolean;
+  /**
+   * Raw filesystem segment this node was created from (e.g. `"api"`,
+   * `"installation"`). Internal lookup key — themes can ignore it.
+   */
+  seg?: string;
 };
 
 export type Manifest = {
@@ -220,6 +225,7 @@ function insertRoute(
         existing.label = segMeta.label ?? existing.label ?? entry.title;
         existing.order = segMeta.order ?? existing.order;
         existing.fallback = entry.fallback;
+        existing.seg = seg;
       } else {
         cursor.children.push({
           route: entry.route,
@@ -227,6 +233,7 @@ function insertRoute(
           order: segMeta.order ?? numberOr(entry.frontmatter, "order", Infinity),
           children: [],
           fallback: entry.fallback,
+          seg,
         });
       }
     } else {
@@ -238,6 +245,7 @@ function insertRoute(
           label: segMeta.label ?? humanise(seg),
           order: segMeta.order ?? Infinity,
           children: [],
+          seg,
         };
         cursor.children.push(child);
       }
@@ -247,13 +255,16 @@ function insertRoute(
   }
 }
 
+/**
+ * Match by raw segment so `_meta.json` label overrides don't fragment a
+ * category into one-child duplicates. Falls back to legacy heuristics for
+ * any nodes that pre-date the `seg` field.
+ */
 function findChildBySegment(node: NavNode, seg: string): NavNode | undefined {
-  // We don't store the segment explicitly, so derive from `route` for leaves
-  // and `label` for categories — but to be safe, we tag categories by trailing
-  // path segment via a parallel map. Simpler: use last segment of route, or
-  // the humanised label match. For correctness, prefer matching by trailing
-  // segment of node.route (leaf) or by category label === humanise(seg).
   for (const c of node.children) {
+    if (c.seg === seg) return c;
+    if (c.seg) continue; // tagged but doesn't match → skip
+    // Legacy fallback (only hit for nodes built before this change).
     if (c.route) {
       const last = c.route.replace(/^\//, "").split("/").pop();
       if (last === seg) return c;

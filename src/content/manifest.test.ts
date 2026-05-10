@@ -33,6 +33,31 @@ test("buildManifest: all locales resolvable, fallback flagged when needed", asyn
   expect(manifest.order.de!.length).toBeGreaterThan(0);
 });
 
+test("nav tree groups all routes under a single category even when _meta.json overrides the label", async () => {
+  // Regression: a `_meta.json` setting `"api": "API"` used to make the
+  // category-lookup miss its match (it compared `humanise("api")` = "Api"
+  // to the existing node's overridden label "API"), so every leaf got its
+  // own duplicate "API" category in the sidebar.
+  const discovery = await discoverContent({
+    contentDir,
+    locales: ["en", "de"],
+    defaultLocale: "en",
+  });
+  const manifest = await buildManifest({
+    discovery,
+    contentDir,
+    locales: ["en", "de"],
+    defaultLocale: "en",
+    basePath: "/",
+  });
+  const apiCategories = manifest.nav.en!.children.filter(
+    (c) => c.seg === "api" || c.label === "API",
+  );
+  expect(apiCategories.length).toBe(1);
+  // And it should have all four expected leaves (config, hooks, components, cli, manifest).
+  expect(apiCategories[0]!.children.length).toBeGreaterThanOrEqual(4);
+});
+
 test("emitManifestModule: produces evaluatable JS string", async () => {
   const discovery = await discoverContent({
     contentDir,
