@@ -4,11 +4,16 @@ import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import remarkGfm from "remark-gfm";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeShiki from "@shikijs/rehype";
 import { rehypeCollectHeadings } from "./headings.ts";
+
+export type HighlightingConfig = false | { light: string; dark: string };
 
 export type CompileOptions = {
   /** Whether to compile in development mode (better stack traces). */
   development?: boolean;
+  /** Build-time Shiki highlighting; `false` disables. */
+  highlighting?: HighlightingConfig;
 };
 
 /**
@@ -18,6 +23,23 @@ export type CompileOptions = {
  * - headings: HeadingItem[] (via rehypeCollectHeadings)
  */
 export async function compileMdx(source: string, opts: CompileOptions = {}): Promise<string> {
+  const highlighting = opts.highlighting ?? false;
+  const rehypePlugins: any[] = [
+    rehypeSlug,
+    [rehypeAutolinkHeadings, { behavior: "wrap" }],
+  ];
+  if (highlighting) {
+    rehypePlugins.push([
+      rehypeShiki,
+      {
+        themes: { light: highlighting.light, dark: highlighting.dark },
+        // CSS-variable output so the theme can switch via `html.dark`.
+        defaultColor: false,
+      },
+    ]);
+  }
+  rehypePlugins.push(rehypeCollectHeadings);
+
   const file = await mdxCompile(source, {
     jsxImportSource: "react",
     development: opts.development ?? false,
@@ -26,11 +48,7 @@ export async function compileMdx(source: string, opts: CompileOptions = {}): Pro
       [remarkMdxFrontmatter, { name: "frontmatter" }],
       remarkGfm,
     ],
-    rehypePlugins: [
-      rehypeSlug,
-      [rehypeAutolinkHeadings, { behavior: "wrap" }],
-      rehypeCollectHeadings,
-    ],
+    rehypePlugins,
     outputFormat: "program",
     format: "mdx",
   });

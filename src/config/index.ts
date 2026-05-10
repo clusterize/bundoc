@@ -1,5 +1,24 @@
 import { resolve } from "node:path";
 
+/**
+ * Build-time syntax highlighting via Shiki. When enabled, `<pre><code>`
+ * blocks are turned into Shiki output with dual light/dark themes
+ * (CSS-variable based; `html.dark` toggles the active theme).
+ */
+export type MdxHighlightingConfig =
+  | boolean
+  | {
+      /** Theme name for light mode. Default: `github-light`. */
+      light?: string;
+      /** Theme name for dark mode. Default: `github-dark`. */
+      dark?: string;
+    };
+
+export type BundocMdxConfig = {
+  /** Build-time syntax highlighting via Shiki. Default: off. */
+  highlighting?: MdxHighlightingConfig;
+};
+
 export type BundocConfig = {
   /** Available locales (BCP-47 codes; bundoc treats them as opaque strings). */
   locales: string[];
@@ -13,9 +32,16 @@ export type BundocConfig = {
   mdxComponentsEntry?: string;
   /** Base path the site is hosted under. Default: `/`. */
   basePath?: string;
+  /** MDX pipeline tweaks (Shiki, etc.). */
+  mdx?: BundocMdxConfig;
 };
 
-export type ResolvedConfig = Required<Omit<BundocConfig, "mdxComponentsEntry">> & {
+export type ResolvedMdxConfig = {
+  /** Resolved highlighting setting. `false` disables; otherwise a theme map. */
+  highlighting: false | { light: string; dark: string };
+};
+
+export type ResolvedConfig = Required<Omit<BundocConfig, "mdxComponentsEntry" | "mdx">> & {
   /** Absolute path to the project root (cwd at load time). */
   rootDir: string;
   /** Absolute path to content dir. */
@@ -24,6 +50,8 @@ export type ResolvedConfig = Required<Omit<BundocConfig, "mdxComponentsEntry">> 
   themeEntry: string;
   /** Absolute path to the mdx-components file, if it exists. May be undefined. */
   mdxComponentsEntry: string | undefined;
+  /** Resolved MDX pipeline config. */
+  mdx: ResolvedMdxConfig;
 };
 
 /** Identity helper for type-safe config authoring. */
@@ -95,6 +123,21 @@ export function resolveConfig(raw: BundocConfig, rootDir: string): ResolvedConfi
     mdxComponentsEntry: mdxComponentsEntryPath,
     basePath,
     rootDir,
+    mdx: resolveMdxConfig(raw.mdx),
+  };
+}
+
+function resolveMdxConfig(raw: BundocMdxConfig | undefined): ResolvedMdxConfig {
+  const highlighting = raw?.highlighting;
+  if (!highlighting) return { highlighting: false };
+  if (highlighting === true) {
+    return { highlighting: { light: "github-light", dark: "github-dark" } };
+  }
+  return {
+    highlighting: {
+      light: highlighting.light ?? "github-light",
+      dark: highlighting.dark ?? "github-dark",
+    },
   };
 }
 

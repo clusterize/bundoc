@@ -57,12 +57,13 @@ export async function rebuildContentCache(opts: {
   // shuffle filenames.
   const sourceToShim = new Map<string, string>();
   const compileTasks: Promise<void>[] = [];
+  const highlighting = config.mdx.highlighting;
   for (const entry of discovery.entries) {
     if (sourceToShim.has(entry.sourcePath)) continue;
     const shimName = shimFilename(entry.sourcePath);
     const shimPath = join(paths.pagesDir, shimName);
     sourceToShim.set(entry.sourcePath, shimPath);
-    compileTasks.push(compileSingle(entry.sourcePath, shimPath, development));
+    compileTasks.push(compileSingle(entry.sourcePath, shimPath, development, highlighting));
   }
   await Promise.all(compileTasks);
 
@@ -137,12 +138,17 @@ export async function recompileSingle(opts: {
   const { config, sourcePath, development = false } = opts;
   const paths = cachePaths(config);
   const shimPath = join(paths.pagesDir, shimFilename(sourcePath));
-  await compileSingle(sourcePath, shimPath, development);
+  await compileSingle(sourcePath, shimPath, development, config.mdx.highlighting);
 }
 
-async function compileSingle(sourcePath: string, shimPath: string, development: boolean) {
+async function compileSingle(
+  sourcePath: string,
+  shimPath: string,
+  development: boolean,
+  highlighting: ResolvedConfig["mdx"]["highlighting"],
+) {
   const source = await Bun.file(sourcePath).text();
-  const compiled = await compileMdx(source, { development });
+  const compiled = await compileMdx(source, { development, highlighting });
   await Bun.write(shimPath, compiled);
 }
 

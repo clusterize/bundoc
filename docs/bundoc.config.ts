@@ -5,4 +5,7 @@ export default defineConfig({
   defaultLocale: "en",
   contentDir: "./content",
   themeEntry: "./theme/index.tsx",
+  mdx: {
+    highlighting: { light: "github-light", dark: "github-dark" },
+  },
 });
