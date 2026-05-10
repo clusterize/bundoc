@@ -1,10 +1,12 @@
 import { Callout } from "./components/Callout";
 import { Steps, Step } from "./components/Steps";
+import { Pre } from "./components/Pre";
 
-// MDX tag overrides + components MDX authors can use directly. Styling for
-// the raw HTML tags lives in theme/styles.css under `.bundoc-prose`.
 const components = {
-  // Author components — drop-in for MDX authors via <Callout>, <Steps>, etc.
+  // Wrap <pre> so Shiki output gets a Copy button overlay and a filename
+  // tab when the fence sets `title="…"`.
+  pre: Pre,
+  // Components MDX authors can use directly.
   Callout,
   Steps,
   Step,
