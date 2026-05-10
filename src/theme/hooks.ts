@@ -109,13 +109,8 @@ export function useFrontmatter<T extends Record<string, unknown> = Record<string
   return useCurrentPage().frontmatter as T;
 }
 
-/**
- * Reserved API for v1 — always returns null. Themes can call it now and the
- * implementation will be filled in once we ship search.
- */
-export function useSearchIndex(): null {
-  return null;
-}
+// useSearchIndex lives in ./search.ts to keep its Orama dependency tree
+// import-isolated. Re-exported by `theme/index.ts`.
 
 export type UseLink = {
   /** Locale-aware href for a route. */

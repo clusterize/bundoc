@@ -9,8 +9,10 @@
     "preview": "bundoc preview"
   },
   "dependencies": {
-    "bundoc": "file:..",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "bundoc": "file:.."
+  },
+  "devDependencies": {
+    "bun-plugin-tailwind": "^0.0.15",
+    "tailwindcss": "^4.0.0"
   }
 }

@@ -4,11 +4,14 @@ import type { ResolvedConfig } from "../config/index.ts";
 import { discoverContent, type DiscoveryResult } from "../content/discover.ts";
 import { buildManifest, emitManifestModule, type Manifest } from "../content/manifest.ts";
 import { compileMdx } from "../mdx/compile.ts";
+import { buildSearchIndexes } from "../search/build-index.ts";
 
 export type CachePaths = {
   /** `.bundoc/cache/` absolute. */
   dir: string;
   pagesDir: string;
+  /** Where per-locale search indexes are persisted (`<locale>.bin`). */
+  searchDir: string;
   manifestPath: string;
   themePath: string;
   mdxComponentsPath: string;
@@ -21,6 +24,7 @@ export function cachePaths(config: ResolvedConfig): CachePaths {
   return {
     dir,
     pagesDir: join(dir, "pages"),
+    searchDir: join(dir, "search"),
     manifestPath: join(dir, "manifest.ts"),
     themePath: join(dir, "theme.tsx"),
     mdxComponentsPath: join(dir, "mdx-components.tsx"),
@@ -83,6 +87,43 @@ export async function rebuildContentCache(opts: {
     emittedFromDir: paths.dir,
   });
   await Bun.write(paths.manifestPath, manifestSrc);
+
+  // Build per-locale search indexes. We pass the original (non-shimmed)
+  // source paths so the extractor sees the user's MDX, not the compiled JSX.
+  // The manifest swap above re-pointed entries to shim files, so look up the
+  // originals from the discovery result.
+  const sourceCache = new Map<string, string>();
+  const sourceLoader = async (p: string) => {
+    let s = sourceCache.get(p);
+    if (s === undefined) {
+      s = await Bun.file(p).text();
+      sourceCache.set(p, s);
+    }
+    return s;
+  };
+  // Build a sibling manifest whose entries still point at originals.
+  const sourceManifest: Manifest = {
+    ...manifest,
+    routes: Object.fromEntries(
+      Object.entries(manifest.routes).map(([route, byLocale]) => [
+        route,
+        Object.fromEntries(
+          Object.entries(byLocale).map(([locale, entry]) => {
+            const original = discovery.routes.get(route)?.entries[locale];
+            return [
+              locale,
+              original ? { ...entry, sourcePath: original.sourcePath } : entry,
+            ];
+          }),
+        ),
+      ]),
+    ),
+  };
+  await buildSearchIndexes({
+    manifest: sourceManifest,
+    sourceLoader,
+    outDir: paths.searchDir,
+  });
 
   return { manifest, paths, discovery };
 }

@@ -5,7 +5,6 @@ export {
   useTOC,
   useCurrentPage,
   useFrontmatter,
-  useSearchIndex,
   useLink,
 } from "./hooks.ts";
 export type {
@@ -14,6 +13,8 @@ export type {
   CurrentPage,
   UseLink,
 } from "./hooks.ts";
+export { useSearchIndex } from "./search.ts";
+export type { SearchHit, SearchClient } from "./search.ts";
 export { Link } from "./Link.tsx";
 export type { LinkProps } from "./Link.tsx";
 export { PageOutlet } from "../runtime/outlet.tsx";
