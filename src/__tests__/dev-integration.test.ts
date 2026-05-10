@@ -3,15 +3,15 @@ import { startDevServer } from "../server/dev-server.ts";
 import { resolve } from "node:path";
 import { rm } from "node:fs/promises";
 
-const exampleDir = resolve(import.meta.dir, "../../example");
+const docsDir = resolve(import.meta.dir, "../../docs");
 const port = 6451;
 
 let server: Awaited<ReturnType<typeof startDevServer>> | undefined;
 
 beforeAll(async () => {
-  // Run inside example/.
-  process.chdir(exampleDir);
-  await rm(resolve(exampleDir, ".bundoc"), { recursive: true, force: true });
+  // Run inside docs/.
+  process.chdir(docsDir);
+  await rm(resolve(docsDir, ".bundoc"), { recursive: true, force: true });
   server = await startDevServer({ port, host: "localhost" });
 });
 
@@ -49,7 +49,7 @@ test("serves SPA shell at /de/faq/installation", async () => {
 
 test("manifest cache contains importer thunks for every (route × locale)", async () => {
   const manifest = await Bun.file(
-    resolve(exampleDir, ".bundoc/cache/manifest.ts"),
+    resolve(docsDir, ".bundoc/cache/manifest.ts"),
   ).text();
   expect(manifest).toContain('"/": {');
   expect(manifest).toContain('"/faq/installation": {');
@@ -61,10 +61,10 @@ test("compiled .tsx shims exist for each MDX file", async () => {
   const { Glob } = Bun;
   const glob = new Glob("*.tsx");
   const found: string[] = [];
-  for await (const f of glob.scan({ cwd: resolve(exampleDir, ".bundoc/cache/pages") })) {
+  for await (const f of glob.scan({ cwd: resolve(docsDir, ".bundoc/cache/pages") })) {
     found.push(f);
   }
-  // 4 example pages + 1 about-only page = 5
+  // 4 i18n pages + 1 about-only page = 5
   expect(found.length).toBe(5);
 });
 

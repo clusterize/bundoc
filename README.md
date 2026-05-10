@@ -52,7 +52,7 @@ import {
 } from "bundoc/theme";
 ```
 
-bundoc owns the router; the theme owns rendering. See `example/` for a
+bundoc owns the router; the theme owns rendering. See `docs/` for a
 complete reference, including a Tailwind v4 layout and a ⌘K command palette.
 
 ## Search
@@ -82,7 +82,7 @@ function CommandPalette() {
 Each hit is `{ route, locale, title, heading, anchor, text, score }` — link
 to `${route}#${anchor}` for a deep-link to the matching section.
 
-The example theme's `SearchPalette.tsx` is a ~150-line reference: ⌘K to open,
+The docs theme's `SearchPalette.tsx` is a ~150-line reference: ⌘K to open,
 arrow-key navigation, debounced query, locale-aware `Link` for selection.
 
 ## bunfig.toml integration

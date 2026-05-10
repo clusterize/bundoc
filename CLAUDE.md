@@ -32,8 +32,8 @@ router, search, and a small set of hooks; the theme renders.
 - `src/server/` — dev server (Bun.serve + watcher), static build
   (Bun.build), preview, cache writer.
 - `src/scaffold/` — `bundoc init` templates.
-- `example/` — currently the example site AND the integration-test target.
-  `DOCS_PLAN.md` migrates this to `docs/` once the docs work begins.
+- `docs/` — the public docs site AND the integration-test target. Doubles
+  as the canonical example consumer of bundoc.
 
 ## Key non-obvious things
 
@@ -49,7 +49,7 @@ router, search, and a small set of hooks; the theme renders.
   (synthesized shims), `index.html` (SPA shell). Bun.serve uses these
   directly; Bun.build entrypoints from `index.html`.
 - **React dedupe**: when a project consumes bundoc via `file:..` linking
-  (the example does), Bun auto-installs peer deps in BOTH locations and
+  (docs/ does), Bun auto-installs peer deps in BOTH locations and
   React ends up loaded twice → "Invalid hook call". The fix is `peer =
   false` in the consumer's `bunfig.toml` so the bundler resolves a single
   React via path-walk to bundoc's install. See `src/server/dedupe-react.ts`
@@ -74,7 +74,7 @@ server live in `src/__tests__/dev-integration.test.ts`. Run all: `bun
 test`. Typecheck: `bunx tsc -p . --noEmit`. Both should be green before
 committing.
 
-When changing the manifest shape or content discovery, update the example
+When changing the manifest shape or content discovery, update the docs
 content tests too — they assert exact route lists.
 
 ---

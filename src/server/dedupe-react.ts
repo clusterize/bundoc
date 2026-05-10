@@ -5,8 +5,8 @@ import { stat } from "node:fs/promises";
 /**
  * Bun bundler plugin that pins `react`, `react-dom`, and a few related
  * specifiers to one canonical install. Without this, when bundoc is consumed
- * via `file:..` linking from `example/`, the bundler can resolve React from
- * both `bundoc/node_modules/react` and `example/node_modules/react`, causing
+ * via `file:..` linking from `docs/`, the bundler can resolve React from
+ * both `bundoc/node_modules/react` and `docs/node_modules/react`, causing
  * "Invalid hook call" because the user theme and bundoc's runtime end up
  * referencing distinct module instances.
  *
