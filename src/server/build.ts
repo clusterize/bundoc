@@ -2,6 +2,7 @@ import { join, resolve, sep, basename } from "node:path";
 import { mkdir, rm, cp, stat } from "node:fs/promises";
 import { loadConfig } from "../config/index.ts";
 import { regenerateAll, cachePaths } from "./cache.ts";
+import { loadBunfigPlugins } from "./load-bunfig-plugins.ts";
 
 export async function runBuild(opts: { out: string }) {
   const config = await loadConfig();
@@ -11,6 +12,13 @@ export async function runBuild(opts: { out: string }) {
   // Wipe and recreate dist.
   await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
+
+  const bunfigPlugins = await loadBunfigPlugins(config.rootDir);
+  if (bunfigPlugins.length) {
+    console.log(
+      `[bundoc] using bunfig plugins: ${bunfigPlugins.map((p) => p.name).join(", ")}`,
+    );
+  }
 
   const result = await Bun.build({
     entrypoints: [paths.htmlPath],
@@ -25,6 +33,7 @@ export async function runBuild(opts: { out: string }) {
       asset: "[name]-[hash].[ext]",
     },
     publicPath: joinPublicPath(config.basePath),
+    plugins: bunfigPlugins,
   });
 
   if (!result.success) {
