@@ -1,0 +1,7 @@
+{
+  "index": { "label": "Introduction", "order": 0 },
+  "getting-started": { "label": "Getting Started", "order": 1 },
+  "guides": { "label": "Guides", "order": 2 },
+  "api": { "label": "API", "order": 3 },
+  "reference": { "label": "Reference", "order": 4 }
+}

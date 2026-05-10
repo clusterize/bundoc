@@ -1,0 +1,95 @@
+---
+title: Writing content
+description: Filename → route mapping, supported frontmatter, _meta.json overrides.
+sidebar:
+  order: 0
+---
+
+# Writing content
+
+Everything under `content/` is MDX. Filenames map to routes; locale
+suffixes split translations. There is no JSON manifest you need to
+maintain — bundoc walks the directory and infers the structure.
+
+## Filename → route
+
+| Filename | Route | Locale |
+|----------|-------|--------|
+| `index.mdx` | `/` | default |
+| `about.mdx` | `/about` | default |
+| `foo/index.mdx` | `/foo` | default |
+| `foo/bar.mdx` | `/foo/bar` | default |
+| `index.de.mdx` | `/de` (when `de` is non-default) | `de` |
+| `foo.de.mdx` | `/de/foo` | `de` |
+| `foo.xx.mdx` | *ignored* (unknown locale) | — |
+| `_drafts.mdx` | *ignored* (leading underscore) | — |
+
+Only the file's name matters for routing; folders contribute path
+segments. The leading-underscore rule applies at every depth.
+
+The reference parser is
+[`parseFilename`](https://github.com/your-org/bundoc/blob/main/src/content/discover.ts)
+in `src/content/discover.ts`.
+
+## Frontmatter
+
+Every MDX file may have YAML frontmatter at the top. bundoc reads it
+without compiling the MDX, so it's cheap.
+
+```mdx title="content/foo.mdx"
+---
+title: My page
+description: A short summary used by themes for meta tags.
+sidebar:
+  order: 2
+  label: Custom label
+---
+
+# Heading
+```
+
+Supported fields:
+
+| Field | Type | Effect |
+|-------|------|--------|
+| `title` | string | Page title; populates `<title>` and `useCurrentPage().title`. |
+| `description` | string | Free-form summary your theme can render in `<meta>` tags. |
+| `sidebar.order` | number | Position in the sidebar (lower first). |
+| `sidebar.label` | string | Override the auto-derived sidebar label. |
+
+Anything else is preserved in `frontmatter` and is available via
+[`useFrontmatter()`](/api/hooks#useFrontmatter). Reach for that for
+domain-specific metadata like `tags`, `authors`, `version`.
+
+## `_meta.json`
+
+For folder-level overrides — labels, ordering, hidden flags — drop a
+`_meta.json` in the folder:
+
+```json title="content/guides/_meta.json"
+{
+  "i18n": { "label": "Internationalisation", "order": 2 },
+  "theme": { "label": "Writing a theme", "order": 3 },
+  "deploy": { "order": 99 }
+}
+```
+
+Keys match either the leaf filename (without `.mdx`) or the folder
+name. See the [_meta.json reference](/reference/meta-json) for the
+schema.
+
+<Callout type="tip" title="Sidebar groups">
+  When a folder has no `index.mdx`, the folder name becomes a sidebar
+  *group label* — `_meta.json` lets you rename the group too.
+</Callout>
+
+## Common pitfalls
+
+- **Wrong locale suffix** — `foo.xx.mdx` is silently ignored when `xx`
+  isn't in `config.locales`. Add the locale to your config, or fix the
+  filename.
+- **Drafts** — there's no built-in `draft: true` flag. Prefix the
+  filename with `_` to exclude.
+- **Title vs heading** — `title` (frontmatter) and the first `#`
+  heading are independent. Themes typically render the heading in the
+  article and the `title` in the browser tab.

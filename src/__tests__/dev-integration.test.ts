@@ -37,13 +37,13 @@ test("serves SPA shell at /de", async () => {
   expect(r.body).toContain('<div id="root">');
 });
 
-test("serves SPA shell at /faq/installation", async () => {
-  const r = await fetchText("/faq/installation");
+test("serves SPA shell at /getting-started/installation", async () => {
+  const r = await fetchText("/getting-started/installation");
   expect(r.status).toBe(200);
 });
 
-test("serves SPA shell at /de/faq/installation", async () => {
-  const r = await fetchText("/de/faq/installation");
+test("serves SPA shell at /de/getting-started/installation (fallback)", async () => {
+  const r = await fetchText("/de/getting-started/installation");
   expect(r.status).toBe(200);
 });
 
@@ -52,20 +52,25 @@ test("manifest cache contains importer thunks for every (route × locale)", asyn
     resolve(docsDir, ".bundoc/cache/manifest.ts"),
   ).text();
   expect(manifest).toContain('"/": {');
-  expect(manifest).toContain('"/faq/installation": {');
+  expect(manifest).toContain('"/getting-started/installation": {');
   // Importer keys are present.
   expect(manifest).toMatch(/__page_\d+: \(\) => import\(/);
 });
 
-test("compiled .tsx shims exist for each MDX file", async () => {
+test("compiled .tsx shims exist for each MDX source file", async () => {
   const { Glob } = Bun;
   const glob = new Glob("*.tsx");
   const found: string[] = [];
   for await (const f of glob.scan({ cwd: resolve(docsDir, ".bundoc/cache/pages") })) {
     found.push(f);
   }
-  // 4 i18n pages + 1 about-only page = 5
-  expect(found.length).toBe(5);
+  const sourceGlob = new Glob("**/*.mdx");
+  const sources: string[] = [];
+  for await (const f of sourceGlob.scan({ cwd: resolve(docsDir, "content") })) {
+    sources.push(f);
+  }
+  // One shim per unique MDX source file.
+  expect(found.length).toBe(sources.length);
 });
 
 test("search index files are served per locale", async () => {
@@ -86,5 +91,5 @@ test("search index round-trip: fetch → restore → query", async () => {
   const hits = await search(db, { term: "installation", tolerance: 1 });
   expect(hits.count).toBeGreaterThan(0);
   const routes = new Set(hits.hits.map((h) => (h.document as unknown as { route: string }).route));
-  expect(routes.has("/faq/installation")).toBe(true);
+  expect(routes.has("/getting-started/installation")).toBe(true);
 });

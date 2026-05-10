@@ -1,0 +1,74 @@
+---
+title: Manifest
+description: The Manifest type — for advanced users who want to render their own sidebar from raw data.
+sidebar:
+  order: 4
+---
+
+# Manifest
+
+For most themes, [`useNav()`](/api/hooks#useNav) and friends are the
+right entry points. They wrap the manifest and shape it for rendering.
+
+If you want raw access — to build a search-the-sitemap UI, a
+breadcrumb, or a sidebar from a non-React renderer — you can read the
+manifest directly.
+
+## The shape
+
+```ts
+type Manifest = {
+  locales: string[];
+  defaultLocale: string;
+  basePath: string;
+  /** Locale-keyed map of route → entry. */
+  routes: Record<string, Record<string, ManifestRouteEntry>>;
+  /** Per-locale navigation tree. */
+  nav: Record<string, NavNode>;
+  /** Ordered route list per locale (drives prev/next). */
+  order: Record<string, string[]>;
+};
+
+type ManifestRouteEntry = {
+  route: string;
+  locale: string;
+  importerKey: string;
+  importer: () => Promise<MdxModule>;
+  frontmatter: Record<string, unknown>;
+  title: string;
+  fallback: boolean;
+};
+
+type NavNode = {
+  route?: string;
+  label: string;
+  order: number;
+  children: NavNode[];
+  fallback?: boolean;
+};
+```
+
+## Where to read it
+
+The manifest is the source of truth behind every theme hook. For now,
+its shape is exported through the runtime types, but **direct manifest
+access from a theme is not part of the stable public API yet** — use
+the hooks instead:
+
+| You want | Use |
+|----------|-----|
+| Routes for the active locale | [`useNav().tree`](/api/hooks#useNav) |
+| Ordered route list (prev/next) | [`useNav().flat`](/api/hooks#useNav) |
+| Page metadata | [`useCurrentPage()`](/api/hooks#useCurrentPage) |
+| Frontmatter (typed) | [`useFrontmatter<T>()`](/api/hooks#useFrontmatter) |
+| Locale list / switcher | [`useLocale()`](/api/hooks#useLocale) |
+
+If your use case isn't covered by these — say, you want to render a
+flat sitemap that includes every locale at once — open an issue. The
+public manifest accessor lands when there's a clear shape for it.
+
+<Callout type="info" title="Internal contract">
+  The `importer` thunks on `ManifestRouteEntry` are how `<PageOutlet>`
+  loads MDX modules. Don't call them yourself; the outlet handles
+  caching, fallback rendering, and error boundaries.
+</Callout>

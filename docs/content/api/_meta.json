@@ -1,0 +1,7 @@
+{
+  "config": { "label": "defineConfig", "order": 0 },
+  "hooks": { "label": "Hooks", "order": 1 },
+  "components": { "label": "Components", "order": 2 },
+  "cli": { "label": "CLI", "order": 3 },
+  "manifest": { "label": "Manifest", "order": 4 }
+}

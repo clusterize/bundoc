@@ -1,0 +1,80 @@
+---
+title: _meta.json
+description: Schema for folder-level overrides — labels, ordering, hidden flags.
+sidebar:
+  order: 1
+---
+
+# `_meta.json`
+
+A `_meta.json` next to your MDX files lets you override the
+auto-derived sidebar labels and ordering for sibling files and
+folders.
+
+## Schema
+
+```ts
+type MetaJson = {
+  [segment: string]:
+    | string                                            // shorthand: { "foo": "Custom label" }
+    | { label?: string; order?: number; hidden?: boolean };
+};
+```
+
+The keys are *segments*: leaf filenames without `.mdx`, or folder
+names. The values are either a plain string label or an object with
+explicit fields.
+
+## Examples
+
+### Reorder + relabel
+
+```json title="content/guides/_meta.json"
+{
+  "writing-content": { "label": "Writing content", "order": 0 },
+  "i18n": { "label": "Internationalisation", "order": 1 },
+  "deploy": { "label": "Deploy", "order": 99 }
+}
+```
+
+### String shorthand
+
+When you only want to relabel:
+
+```json
+{
+  "i18n": "Internationalisation"
+}
+```
+
+### Hidden entries
+
+```json
+{
+  "drafts": { "hidden": true }
+}
+```
+
+A hidden entry stays accessible by URL but doesn't appear in the
+sidebar or in `useNav().flat` (and so doesn't show up in prev/next).
+
+<Callout type="tip">
+  Prefer renaming the file to `_drafts.mdx` if you want it ignored
+  entirely. `hidden: true` keeps the route reachable for direct
+  linking.
+</Callout>
+
+## Precedence
+
+Sidebar order is resolved in this priority:
+
+1. `_meta.json` `order` for the segment.
+2. `frontmatter.sidebar.order` on the file itself.
+3. Fallback `0`.
+
+Labels resolve in this priority:
+
+1. `_meta.json` `label` for the segment.
+2. `frontmatter.sidebar.label`.
+3. `frontmatter.title`.
+4. Auto-derived from the segment name (`getting-started` → *Getting Started*).

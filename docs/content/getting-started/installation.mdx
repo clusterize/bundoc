@@ -1,0 +1,69 @@
+---
+title: Installation
+description: Scaffold a new bundoc site and run the dev server.
+sidebar:
+  order: 0
+---
+
+# Installation
+
+bundoc runs on [Bun](https://bun.sh). It is the only prerequisite.
+
+<Steps>
+  <Step>
+    **Scaffold a new project.**
+
+    ```bash
+    bunx bundoc init my-docs
+    ```
+
+    This creates a `content/`, `theme/`, and `bundoc.config.ts` plus a
+    `package.json` that points at bundoc as a peer.
+  </Step>
+  <Step>
+    **Install dependencies.**
+
+    ```bash
+    cd my-docs
+    bun install
+    ```
+  </Step>
+  <Step>
+    **Start the dev server.**
+
+    ```bash
+    bunx bundoc dev
+    ```
+
+    The default port is `3000`. Edit any `.mdx` in `content/` and the
+    page hot-reloads.
+  </Step>
+</Steps>
+
+## React de-dupe
+
+When a project consumes bundoc via `file:..` linking — or via a
+mono-repo workspace — Bun may auto-install React in two locations,
+producing the dreaded *Invalid hook call* error. The reliable fix is to
+add this to your `bunfig.toml`:
+
+```toml title="bunfig.toml"
+[install]
+peer = false
+```
+
+This tells Bun not to auto-install peer dependencies for the consumer,
+so the bundler resolves a single React via path-walk.
+
+<Callout type="info" title="Why two Reacts?">
+  Without `peer = false`, Bun installs React in both
+  `bundoc/node_modules/react` and `your-project/node_modules/react`,
+  and the bundler ends up with two distinct module instances. Hooks
+  rely on a single `react` instance — the runtime check trips.
+</Callout>
+
+## What's next
+
+- [Project structure](/getting-started/project-structure) — what's in
+  the scaffold.
+- [Your first page](/getting-started/first-page) — write some MDX.

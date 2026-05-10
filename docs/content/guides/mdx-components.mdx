@@ -1,0 +1,134 @@
+---
+title: MDX components
+description: Tag overrides, Copy button on pre, custom Callout authoring component.
+sidebar:
+  order: 4
+---
+
+# MDX components
+
+`theme/mdx-components.tsx` is the single place where you customise how
+MDX renders. It default-exports a map of names to React components.
+
+```tsx title="theme/mdx-components.tsx"
+const components = {
+  // Override raw HTML tags emitted by MDX.
+  pre: MyPre,
+  code: MyCode,
+  a: MyAnchor,
+  h2: MyH2,
+  // Author components — usable directly as <Callout> in MDX bodies.
+  Callout,
+  Steps,
+  Step,
+};
+
+export default components;
+```
+
+The contract is just MDX's `MDXProvider`: keys that match HTML tag
+names override that tag; anything else becomes a component MDX authors
+can call by name.
+
+## Recipe: copy button on `<pre>`
+
+```tsx title="theme/components/Pre.tsx"
+import { Children, isValidElement, type ReactNode } from "react";
+import { useState } from "react";
+
+function extractText(children: ReactNode): string {
+  let out = "";
+  Children.forEach(children, (c) => {
+    if (typeof c === "string") out += c;
+    else if (isValidElement(c)) {
+      out += extractText((c.props as { children?: ReactNode }).children);
+    }
+  });
+  return out;
+}
+
+export function Pre(props: React.HTMLAttributes<HTMLPreElement>) {
+  const [copied, setCopied] = useState(false);
+  const text = extractText(props.children);
+
+  return (
+    <div className="relative group">
+      <pre {...props} />
+      <button
+        type="button"
+        onClick={async () => {
+          await navigator.clipboard.writeText(text);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        }}
+        className="absolute right-2 top-2 opacity-0 group-hover:opacity-100"
+      >
+        {copied ? "✓" : "Copy"}
+      </button>
+    </div>
+  );
+}
+```
+
+Then register:
+
+```tsx
+import { Pre } from "./components/Pre";
+export default { pre: Pre };
+```
+
+This works on both plain code blocks and Shiki output — Shiki emits
+nested `<span>` inside `<pre><code>`, which the recursive
+`extractText` walks.
+
+## Recipe: callout authoring component
+
+```tsx title="theme/components/Callout.tsx"
+export function Callout({
+  type = "info",
+  title,
+  children,
+}: {
+  type?: "info" | "warn" | "danger" | "tip";
+  title?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div role="note" data-type={type} className="callout">
+      {title ? <p className="callout-title">{title}</p> : null}
+      {children}
+    </div>
+  );
+}
+```
+
+Authors then write:
+
+```mdx
+<Callout type="warn" title="Heads up">
+  This API will change before 1.0.
+</Callout>
+```
+
+## Recipe: heading anchor links
+
+```tsx
+function H2(props: React.HTMLAttributes<HTMLHeadingElement>) {
+  return (
+    <h2 {...props}>
+      <a href={`#${props.id}`} className="anchor">#</a>
+      {props.children}
+    </h2>
+  );
+}
+```
+
+bundoc already runs `rehype-slug` and `rehype-autolink-headings`
+upstream, so a heading like `## Foo bar` gets `id="foo-bar"` and an
+auto-anchor. This recipe is for *additional* presentation — e.g. the
+`#` icon you see in the docs theme.
+
+<Callout type="tip">
+  The components from this docs site live in
+  `docs/theme/components/` if you want a working reference.
+</Callout>

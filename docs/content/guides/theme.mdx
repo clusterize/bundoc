@@ -1,0 +1,114 @@
+---
+title: Writing a theme
+description: The theme contract, provider tree, and minimal ThemeApp.
+sidebar:
+  order: 3
+---
+
+# Writing a theme
+
+A bundoc theme is a normal React app that imports hooks and components
+from `bundoc/theme`. There is no theme-override system, no shadow
+DOM, no slot system. Every pixel that renders is your code.
+
+## The minimal theme
+
+```tsx title="theme/index.tsx"
+import {
+  PageOutlet,
+  Link,
+  useNav,
+  useCurrentPage,
+} from "bundoc/theme";
+
+export default function ThemeApp() {
+  const { tree, prev, next, currentPath } = useNav();
+  const { title } = useCurrentPage();
+
+  return (
+    <div className="layout">
+      <Sidebar nodes={tree.children} currentPath={currentPath} />
+      <main>
+        <h1>{title}</h1>
+        <article>
+          <PageOutlet
+            fallback={<p>Loading…</p>}
+            notFound={<p>404 — not found.</p>}
+          />
+        </article>
+        {prev ? <Link to={prev.route}>← {prev.title}</Link> : null}
+        {next ? <Link to={next.route}>{next.title} →</Link> : null}
+      </main>
+    </div>
+  );
+}
+```
+
+Default-export a single component. bundoc mounts it inside its own
+provider tree.
+
+## The provider tree
+
+When `bundoc dev` boots, it does this:
+
+```
+mountBundoc({ manifest, ThemeApp, mdxComponents })
+  └── <ManifestProvider>
+        └── <Router>
+              └── <RouteMatchProvider>
+                    └── <MdxComponentsProvider>
+                          └── <PageModuleProvider>
+                                └── <ThemeApp />        ← your code
+                                    └── <PageOutlet />
+                                        └── compiled MDX
+```
+
+Every theme hook (`useNav`, `useLocale`, `useCurrentPage`, …) reads
+from one of these providers. You shouldn't touch them directly — the
+hooks are the contract.
+
+## `<PageOutlet>`
+
+`<PageOutlet>` renders the active route's MDX. It accepts:
+
+| Prop | Type | When it shows |
+|------|------|---------------|
+| `fallback` | `ReactNode` | While the page module is loading. |
+| `notFound` | `ReactNode` | Route doesn't exist for the active locale. |
+| `errorFallback` | `ReactNode` | Page module errored on import. |
+
+Place it wherever the article body should go. There's exactly one
+`<PageOutlet>` per app.
+
+## `mdx-components.tsx`
+
+`mdx-components.tsx` next to your `theme/index.tsx` is an optional
+default-exported map of MDX tags or component names to React
+components. bundoc registers it via `MDXProvider`, so each MDX module
+sees those overrides.
+
+```tsx title="theme/mdx-components.tsx"
+import { Callout } from "./components/Callout";
+
+export default {
+  // Tag overrides — apply to every <a>, <pre>, etc. in MDX.
+  pre: MyPreWrapper,
+  // Author components — drop into MDX as <Callout type="info">…</Callout>.
+  Callout,
+};
+```
+
+See [MDX components](/guides/mdx-components) for recipes.
+
+## React de-dupe
+
+Add this to your project's `bunfig.toml`:
+
+```toml title="bunfig.toml"
+[install]
+peer = false
+```
+
+Without it, Bun installs React in two locations and you'll see
+*Invalid hook call*. Discussed in
+[Installation](/getting-started/installation#react-de-dupe).

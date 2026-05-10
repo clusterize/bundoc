@@ -1,0 +1,72 @@
+---
+title: Your first page
+description: Add a page, see it in the sidebar, override its label.
+sidebar:
+  order: 2
+---
+
+# Your first page
+
+Add a new file under `content/` and bundoc picks it up immediately.
+
+<Steps>
+  <Step>
+    **Create the file.**
+
+    ```mdx title="content/about.mdx"
+    ---
+    title: About
+    description: Why this exists.
+    ---
+
+    # About
+
+    bundoc is the docs framework I wish existed.
+
+    ## The pitch
+
+    MDX content. A theme you own. Search that ships with the static build.
+    ```
+  </Step>
+  <Step>
+    **Reload the dev server.**
+
+    The new page appears in the sidebar at `/about`. Headings (`##`,
+    `###`) become entries in the on-this-page TOC automatically.
+  </Step>
+  <Step>
+    **Override the sidebar label.**
+
+    Add a `_meta.json` next to the file:
+
+    ```json title="content/_meta.json"
+    {
+      "about": { "label": "About bundoc", "order": 1 }
+    }
+    ```
+
+    Now the sidebar shows *About bundoc* and orders this entry second.
+  </Step>
+</Steps>
+
+## What just happened
+
+bundoc's content pipeline is fully file-system driven:
+
+- **Filename → route**: `about.mdx` becomes `/about`. `foo/index.mdx`
+  becomes `/foo`. See [the routing guide](/guides/routing) for the full
+  table.
+- **Frontmatter → metadata**: `title` populates the page title,
+  `sidebar.order` controls position, `sidebar.label` overrides the
+  display label inline.
+- **Headings → TOC**: bundoc walks the rendered MDX, slugifies headings
+  via `github-slugger`, and exposes them through
+  [`useTOC()`](/api/hooks#useTOC).
+- **Heading-section index**: each heading-section becomes a row in the
+  build-time search index. ⌘K finds it.
+
+## What's next
+
+- [Writing content](/guides/writing-content) — every frontmatter field
+  and filename rule.
+- [i18n](/guides/i18n) — translate that page to German.

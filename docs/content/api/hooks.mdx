@@ -1,0 +1,173 @@
+---
+title: Hooks
+description: Every hook exposed by bundoc/theme — signatures, return shapes, gotchas.
+sidebar:
+  order: 1
+---
+
+# Hooks
+
+All theme hooks come from the `bundoc/theme` subpath:
+
+```tsx
+import {
+  useNav,
+  useLocale,
+  useCurrentPage,
+  useTOC,
+  useFrontmatter,
+  useLink,
+  useSearchIndex,
+} from "bundoc/theme";
+```
+
+Each hook returns a stable identity per render — you can safely pass
+returned values into dependency arrays.
+
+## useNav
+
+```ts
+function useNav(): {
+  tree: NavNode;
+  flat: string[];
+  currentPath: string;
+  prev: { route: string; title: string } | null;
+  next: { route: string; title: string } | null;
+};
+```
+
+Returns the locale-specific navigation tree, the flattened ordered
+route list, and the current route's neighbours.
+
+**When to use**: rendering the sidebar, prev/next links, breadcrumbs.
+
+`tree` is rooted at an unnamed top-level NavNode; iterate
+`tree.children` to render the sidebar. Each `NavNode` is:
+
+```ts
+type NavNode = {
+  route?: string;
+  label: string;
+  order: number;
+  children: NavNode[];
+  fallback?: boolean;
+};
+```
+
+A node with no `route` is a *group* (a folder without an index). A
+node with `fallback: true` exists in the locale only because bundoc
+synthesised it from the default-locale source.
+
+## useLocale
+
+```ts
+function useLocale(): {
+  locale: string;
+  locales: string[];
+  defaultLocale: string;
+  setLocale: (next: string) => void;
+};
+```
+
+The active locale, the full locale list, and a navigator. Calling
+`setLocale("de")` from `/about` navigates to `/de/about`.
+
+**Gotcha**: `setLocale` no-ops if you pass the active locale.
+
+## useCurrentPage
+
+```ts
+function useCurrentPage(): {
+  route: string;
+  locale: string;
+  frontmatter: Record<string, unknown>;
+  headings: Heading[];
+  fallback: boolean;
+  notFound: boolean;
+  title: string;
+};
+```
+
+Everything you need to render around the active page. `fallback` is
+`true` when the page renders the default-locale source because the
+active locale's translation is missing.
+
+```ts
+type Heading = { id: string; text: string; level: number };
+```
+
+## useTOC
+
+```ts
+function useTOC(): Heading[];
+```
+
+Returns the flat list of MDX headings for the active page. Equivalent
+to `useCurrentPage().headings`. Common usage:
+
+```tsx
+const headings = useTOC().filter((h) => h.level >= 2 && h.level <= 3);
+```
+
+## useFrontmatter
+
+```ts
+function useFrontmatter<T extends Record<string, unknown>>(): T;
+```
+
+Typed accessor over `useCurrentPage().frontmatter`. Useful for
+domain-specific fields:
+
+```tsx
+const fm = useFrontmatter<{ tags?: string[] }>();
+fm.tags?.map((t) => <Tag key={t} name={t} />);
+```
+
+## useLink
+
+```ts
+function useLink(): {
+  href: (route: string, opts?: { locale?: string }) => string;
+  navigate: (route: string, opts?: { locale?: string; replace?: boolean }) => void;
+};
+```
+
+Locale-aware URL construction and programmatic navigation. Use
+`href()` when you need to pass a value as a prop to something that
+isn't a `<Link>` (like `<form action>`).
+
+## useSearchIndex
+
+```ts
+function useSearchIndex(): {
+  query: (term: string, opts?: { limit?: number; tolerance?: number }) => Promise<SearchHit[]>;
+  ready: boolean;
+  loading: boolean;
+  error: Error | null;
+};
+```
+
+Lazy search client scoped to the active locale. The first
+`query()` call fetches and restores the persisted index for the
+current locale; subsequent queries are in-memory.
+
+Returns `SearchHit[]`:
+
+```ts
+type SearchHit = {
+  route: string;
+  locale: string;
+  title: string;
+  heading: string;
+  anchor: string;
+  text: string;
+  score: number;
+};
+```
+
+Link to `${route}#${anchor}` to deep-link into a section.
+
+<Callout type="info">
+  `query("")` returns `[]` synchronously — no network, no error. Pass
+  the user's input directly without guarding.
+</Callout>

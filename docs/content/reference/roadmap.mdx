@@ -1,0 +1,79 @@
+---
+title: Roadmap
+description: What's deferred from v1, and what shape the future has.
+sidebar:
+  order: 2
+---
+
+# Roadmap
+
+bundoc is pre-1.0. The hooks and config fields documented in the
+[API section](/api/config) are stable. The list below is what's
+deliberately deferred — we have shapes in mind but no timeline.
+
+## SSR / SSG
+
+Server-side rendering is *forward-compatible* but not implemented.
+v1 keeps the door open by:
+
+- All hooks are pure context reads — render-time safe.
+- Page modules are isomorphic (compiled MDX runs anywhere).
+- Manifest generation is a build-time step independent of CSR/SSR.
+
+The planned shape is `bundoc build --ssg`: walks the flat
+`(route × locale)` map, renders each combination via
+`react-dom/server`'s `renderToString`, and emits one HTML file per
+page. The same JS chunks hydrate.
+
+## Vector / semantic search
+
+Today's index is BM25 + typo tolerance via Orama. The planned config
+shape:
+
+```ts
+search?: {
+  semantic?: {
+    embedder:
+      | "openai"
+      | "voyage"
+      | { fn: (s: string) => Promise<number[]> };
+  };
+};
+```
+
+The same `useSearchIndex()` API; the theme code wouldn't change.
+Embedding generation happens at build time so the runtime stays
+zero-server.
+
+## Redirects
+
+```ts
+redirects?: Array<{
+  from: string;       // glob or exact
+  to: string;
+  status?: 301 | 302; // default 301
+}>;
+```
+
+The dev server applies these directly. `bundoc build` writes them
+into a platform-appropriate file (`_redirects` for Cloudflare /
+Netlify, `vercel.json` rewrites, etc.).
+
+## Plugin / remark / rehype configuration
+
+Today the MDX pipeline is fixed: GFM + frontmatter + slug + autolink
+headings + (optional) Shiki + heading collector. Eventually we'll
+expose a `mdx.remarkPlugins` and `mdx.rehypePlugins` field with a way
+to insert before/after our own steps. The shape is undecided — open
+issues with concrete use cases shape the API.
+
+## Out of scope
+
+Some things bundoc explicitly won't ship in 1.0:
+
+- A theme-override or theme-skin system. The theme is your code.
+- A built-in marketing-site mode (newsletter, blog index, RSS).
+- Versioned docs (`v1/`, `v2/` URL trees). Easy enough to do at the
+  filesystem level if you need it.
+- A live playground / Sandpack embed. Out of scope for the docs
+  generator.

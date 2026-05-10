@@ -1,30 +1,100 @@
 ---
 title: bundoc
-description: A Bun-native CLI for MDX docs sites.
+description: A Bun-native CLI for MDX docs sites. The content is .mdx, the theme is your React app.
 sidebar:
   order: 0
 ---
 
-# bundoc
+# MDX docs. Bun-native. Theme-owned.
 
-A **Bun-native** CLI for MDX documentation sites, where the *content* is `.mdx` and the *theme* is a user-owned React app.
-
-## What you get
-
-- File-system-routed MDX in a `content/` directory.
-- Built-in i18n via `<name>.<locale>.mdx` filename suffix.
-- A user-supplied theme that consumes routing via hooks.
-
-## Quick start
+bundoc supplies the content pipeline, router, search, and a small set
+of hooks. **You** ship the theme — every pixel that renders is your
+React code, never an opaque skin we hand you.
 
 ```bash
-bunx bundoc dev
+bunx bundoc init my-docs
+cd my-docs && bun install && bunx bundoc dev
 ```
 
-That's it. Edit any `.mdx` file in `content/` and the page hot-reloads.
+## Three surfaces
 
-## Why
+The whole contract is three files. Here they are.
 
-Most docs frameworks ship a theme. bundoc ships the *plumbing* — you ship the
-theme. If you want to tweak how a heading renders, change your `mdx-components.tsx`.
-If you want a sidebar, write the sidebar.
+```ts title="bundoc.config.ts"
+import { defineConfig } from "bundoc/config";
+
+export default defineConfig({
+  locales: ["en", "de"],
+  defaultLocale: "en",
+  contentDir: "./content",
+  themeEntry: "./theme/index.tsx",
+  mdx: { highlighting: true },
+});
+```
+
+```mdx title="content/index.mdx"
+---
+title: Hello
+sidebar: { order: 0 }
+---
+
+# Welcome
+
+bundoc renders this MDX through your theme. Frontmatter
+controls the sidebar; headings build the TOC.
+```
+
+```tsx title="theme/index.tsx"
+import { PageOutlet, useNav, useCurrentPage } from "bundoc/theme";
+
+export default function ThemeApp() {
+  const { tree } = useNav();
+  const { title } = useCurrentPage();
+  return (
+    <div>
+      <Sidebar nodes={tree.children} />
+      <article>
+        <h1>{title}</h1>
+        <PageOutlet />
+      </article>
+    </div>
+  );
+}
+```
+
+That's the entire surface area.
+
+## What's inside
+
+<Steps>
+  <Step>
+    **i18n that just works** — drop a `foo.de.mdx` next to `foo.mdx`,
+    bundoc routes it at `/de/foo` and falls back to the default locale
+    when a translation is missing. [Learn more →](/guides/i18n)
+  </Step>
+  <Step>
+    **Build-time search** — Orama BM25 + typo tolerance, one ~25 KB
+    index per locale, zero server runtime. [Learn more →](/guides/search)
+  </Step>
+  <Step>
+    **Code-split routes** — every MDX file is its own dynamic import,
+    so the SPA shell stays small. [Learn more →](/guides/routing)
+  </Step>
+  <Step>
+    **Your theme, end to end** — no theme override system, no hidden
+    CSS layers. You own the React tree.
+    [Learn more →](/guides/theme)
+  </Step>
+</Steps>
+
+## Where to go next
+
+- [Installation](/getting-started/installation) — three commands, one config.
+- [Writing your first page](/getting-started/first-page) — frontmatter, headings, sidebar.
+- [Hooks reference](/api/hooks) — the full theme surface.
+
+<Callout type="tip" title="Heads up">
+  bundoc is pre-1.0. The hooks listed in the API section are stable;
+  internals are not. See the [roadmap](/reference/roadmap) for what's
+  next.
+</Callout>

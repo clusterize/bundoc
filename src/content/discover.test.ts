@@ -52,9 +52,17 @@ test("discoverContent: docs/content groups by route + locale", async () => {
     defaultLocale: "en",
   });
   const r = [...routes.keys()].sort();
-  expect(r).toEqual(["/", "/about", "/faq/installation"]);
-  const root = routes.get("/")!;
-  expect(Object.keys(root.entries).sort()).toEqual(["de", "en"]);
-  // About is English-only.
-  expect(Object.keys(routes.get("/about")!.entries)).toEqual(["en"]);
+  // Root index has both locales.
+  expect(r).toContain("/");
+  expect(Object.keys(routes.get("/")!.entries).sort()).toEqual(["de", "en"]);
+  // Spot-check a representative subtree per top-level group.
+  expect(r).toContain("/getting-started/installation");
+  expect(r).toContain("/guides/i18n");
+  expect(r).toContain("/api/hooks");
+  expect(r).toContain("/reference/roadmap");
+  // Non-default-locale-only entries: there should not be any orphan locales.
+  for (const route of r) {
+    const locales = Object.keys(routes.get(route)!.entries);
+    expect(locales).toContain("en");
+  }
 });

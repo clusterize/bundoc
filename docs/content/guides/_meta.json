@@ -1,0 +1,10 @@
+{
+  "writing-content": { "label": "Writing content", "order": 0 },
+  "routing": { "label": "Routing", "order": 1 },
+  "i18n": { "label": "i18n", "order": 2 },
+  "theme": { "label": "Writing a theme", "order": 3 },
+  "mdx-components": { "label": "MDX components", "order": 4 },
+  "search": { "label": "Search", "order": 5 },
+  "styling": { "label": "Styling", "order": 6 },
+  "deploy": { "label": "Deploy", "order": 7 }
+}

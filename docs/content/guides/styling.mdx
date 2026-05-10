@@ -1,0 +1,131 @@
+---
+title: Styling
+description: Tailwind v4, shadcn/ui, dark mode toggle.
+sidebar:
+  order: 6
+---
+
+# Styling
+
+bundoc has no opinion about your CSS. It hands the bundler a `<link>`
+to your stylesheet and gets out of the way. The conventions below are
+what the docs site uses; nothing is required.
+
+## Tailwind v4
+
+Add Tailwind via the Bun plugin and a `bunfig.toml` entry:
+
+```toml title="bunfig.toml"
+[serve.static]
+plugins = ["bun-plugin-tailwind"]
+```
+
+bundoc honours `[serve.static].plugins` for both `bundoc dev` and
+`bundoc build` — see
+[`src/server/load-bunfig-plugins.ts`](https://github.com/your-org/bundoc/blob/main/src/server/load-bunfig-plugins.ts).
+
+Then a single import in your stylesheet:
+
+```css title="theme/styles.css"
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-bundoc: oklch(0.7 0.18 250);
+}
+```
+
+Import the stylesheet from your theme entry:
+
+```tsx title="theme/index.tsx"
+import "./styles.css";
+```
+
+## shadcn/ui
+
+Drop in shadcn primitives by following the
+[manual install](https://ui.shadcn.com/docs/installation/manual) for
+Tailwind v4. The docs site uses Button, Dialog, Command, Tooltip,
+ScrollArea, Separator, Tabs, and Sheet.
+
+Three things are worth knowing:
+
+<Steps>
+  <Step>
+    **Set up `@/` aliases** in your `tsconfig.json` so shadcn's import
+    paths resolve:
+
+    ```json
+    {
+      "compilerOptions": {
+        "baseUrl": ".",
+        "paths": { "@/*": ["./*"] }
+      }
+    }
+    ```
+  </Step>
+  <Step>
+    **Add the cn() helper** in `lib/utils.ts`:
+
+    ```ts
+    import { clsx, type ClassValue } from "clsx";
+    import { twMerge } from "tailwind-merge";
+
+    export function cn(...inputs: ClassValue[]) {
+      return twMerge(clsx(inputs));
+    }
+    ```
+  </Step>
+  <Step>
+    **Use the isolated linker** if you consume bundoc via `file:..`:
+
+    ```bash
+    bun install --linker isolated
+    ```
+
+    This keeps Bun from looping on the parent dependency.
+  </Step>
+</Steps>
+
+## Dark mode toggle
+
+Persist a `light` / `dark` preference in `localStorage` and toggle a
+class on `<html>`:
+
+```tsx
+import { useEffect, useState } from "react";
+
+const KEY = "theme";
+
+export function ThemeToggle() {
+  const [mode, setMode] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const stored = localStorage.getItem(KEY);
+    const m = stored === "dark" || stored === "light"
+      ? stored
+      : window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    setMode(m);
+    document.documentElement.classList.toggle("dark", m === "dark");
+  }, []);
+
+  return (
+    <button onClick={() => {
+      const next = mode === "dark" ? "light" : "dark";
+      setMode(next);
+      document.documentElement.classList.toggle("dark", next === "dark");
+      localStorage.setItem(KEY, next);
+    }}>
+      {mode === "dark" ? "☀" : "☾"}
+    </button>
+  );
+}
+```
+
+## Shiki + dark mode
+
+When you enable [Shiki highlighting](/api/config#mdxhighlighting),
+bundoc emits CSS variables for both themes. The same `html.dark` class
+toggles them automatically — no extra wiring needed.

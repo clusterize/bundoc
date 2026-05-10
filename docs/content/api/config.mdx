@@ -1,0 +1,122 @@
+---
+title: defineConfig
+description: Every field of bundoc's config, with types and defaults.
+sidebar:
+  order: 0
+---
+
+# defineConfig
+
+`bundoc.config.ts` exports a `BundocConfig`. The `defineConfig` helper
+is identity-typed so you get autocomplete:
+
+```ts title="bundoc.config.ts"
+import { defineConfig } from "bundoc/config";
+
+export default defineConfig({
+  locales: ["en", "de"],
+  defaultLocale: "en",
+  contentDir: "./content",
+  themeEntry: "./theme/index.tsx",
+  basePath: "/",
+  mdx: { highlighting: true },
+});
+```
+
+## `locales`
+
+```ts
+locales: string[];
+```
+
+The set of available locales. bundoc treats them as opaque strings
+(BCP-47 codes are conventional, but not enforced).
+
+**Required.** Must contain at least one entry.
+
+## `defaultLocale`
+
+```ts
+defaultLocale: string;
+```
+
+Which locale's URLs are served unprefixed. All other locales are
+prefixed with `/<locale>`.
+
+**Required.** Must be one of `locales`.
+
+## `contentDir`
+
+```ts
+contentDir?: string;  // default: "./content"
+```
+
+Path (relative to the project root) where MDX content lives. The
+file-system tree under this directory becomes your routes.
+
+## `themeEntry`
+
+```ts
+themeEntry?: string;  // default: "./theme/index.tsx"
+```
+
+Path to your theme's default-exported component. The exported value
+must be a React component bundoc can mount.
+
+## `mdxComponentsEntry`
+
+```ts
+mdxComponentsEntry?: string;  // default: "./theme/mdx-components.tsx"
+```
+
+Path to a module that default-exports an MDX components map.
+Optional — if the file doesn't exist, bundoc uses an empty map.
+
+## `basePath`
+
+```ts
+basePath?: string;  // default: "/"
+```
+
+URL prefix the site is hosted under. Stripped on incoming requests
+and re-prepended on outgoing hrefs. See
+[Routing → basePath](/guides/routing#basepath).
+
+## `mdx.highlighting`
+
+```ts
+mdx?: {
+  highlighting?: boolean | { light?: string; dark?: string };
+};
+// default: off
+```
+
+Build-time syntax highlighting via Shiki. `true` enables the default
+themes (`github-light` / `github-dark`); pass an object to pick
+[any Shiki bundled theme](https://shiki.style/themes).
+
+```ts
+mdx: {
+  highlighting: { light: "vitesse-light", dark: "vitesse-dark" },
+}
+```
+
+When enabled, bundoc emits both themes via CSS variables; the
+`.dark` class on `<html>` switches the active one. Zero runtime
+bundle cost — the highlighter runs at build time.
+
+## Future fields
+
+These are planned and may land in subsequent versions:
+
+```ts
+type FutureBundocConfig = {
+  search?: {
+    /** Switch to a vector index. */
+    semantic?: { embedder: "openai" | "voyage" | { fn: (s: string) => Promise<number[]> } };
+  };
+  redirects?: Array<{ from: string; to: string; status?: 301 | 302 }>;
+};
+```
+
+Watch [the roadmap](/reference/roadmap) for status.

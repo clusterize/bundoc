@@ -1,0 +1,88 @@
+---
+title: CLI
+description: Commands and flags — bundoc dev, build, preview, init.
+sidebar:
+  order: 3
+---
+
+# CLI
+
+```text
+bundoc <command> [options]
+```
+
+All commands read `bundoc.config.ts` from the working directory.
+
+## `bundoc dev`
+
+Start the dev server with HMR.
+
+```bash
+bunx bundoc dev
+bunx bundoc dev --port 4000 --host 0.0.0.0
+```
+
+| Flag | Default | Notes |
+|------|---------|-------|
+| `--port <n>` | `3000` | Listening port. |
+| `--host <addr>` | `localhost` | Bind address. |
+
+The dev server watches `content/` and `theme/`, recompiles single MDX
+files on change, and rebuilds the manifest when files are added or
+removed. Output goes to `.bundoc/cache/`.
+
+## `bundoc build`
+
+Build a static site to `dist/`.
+
+```bash
+bunx bundoc build
+bunx bundoc build --out public
+```
+
+| Flag | Default | Notes |
+|------|---------|-------|
+| `--out <dir>` | `dist` | Output directory. |
+
+Build artifacts include the SPA shell, code-split route chunks, your
+CSS, and per-locale search indexes under
+`<out>/_bundoc/search/<locale>.bin`.
+
+## `bundoc preview`
+
+Serve a previously built `dist/` with SPA fallback.
+
+```bash
+bunx bundoc preview
+bunx bundoc preview --port 4173
+```
+
+| Flag | Default | Notes |
+|------|---------|-------|
+| `--out <dir>` | `dist` | Directory to serve. |
+| `--port <n>` | `4173` | Listening port. |
+| `--host <addr>` | `localhost` | Bind address. |
+
+Useful for verifying the static build before deploying.
+
+## `bundoc init`
+
+Scaffold a new project.
+
+```bash
+bunx bundoc init my-docs
+bunx bundoc init .       # current directory
+```
+
+| Positional | Default | Notes |
+|------------|---------|-------|
+| `<dir>` | `.` | Directory to scaffold into. |
+
+Creates `bundoc.config.ts`, `bunfig.toml`, `content/`, and `theme/`.
+
+## Global flags
+
+```bash
+bunx bundoc --help
+bunx bundoc --version
+```

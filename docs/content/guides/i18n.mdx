@@ -1,0 +1,111 @@
+---
+title: i18n
+description: Locale suffix convention, fallback flow, locale switcher pattern.
+sidebar:
+  order: 2
+---
+
+# i18n
+
+bundoc handles internationalisation through the filesystem. There is
+no string catalogue to maintain — the unit of translation is an MDX
+file.
+
+## The convention
+
+Set up locales in your config:
+
+```ts title="bundoc.config.ts"
+export default defineConfig({
+  locales: ["en", "de"],
+  defaultLocale: "en",
+});
+```
+
+Then drop translations next to the originals:
+
+```
+content/
+├── index.mdx        → /
+├── index.de.mdx     → /de
+├── about.mdx        → /about
+└── faq/
+    ├── installation.mdx        → /faq/installation
+    └── installation.de.mdx     → /de/faq/installation
+```
+
+The default locale's URLs are unprefixed. Every other locale is
+prefixed with `/<locale>`.
+
+## Fallback flow
+
+When a translation is missing, bundoc *synthesizes* an entry for the
+missing locale that points at the default-locale source. The page
+still renders at the prefixed URL — readers don't see a 404 just
+because someone hasn't translated a page yet.
+
+Your theme can detect this and show a banner:
+
+```tsx
+import { useCurrentPage } from "bundoc/theme";
+
+function Article() {
+  const page = useCurrentPage();
+  return (
+    <>
+      {page.fallback ? (
+        <div role="status">No translation available — showing the default.</div>
+      ) : null}
+      <PageOutlet />
+    </>
+  );
+}
+```
+
+The bundoc-docs theme (the site you're reading) uses exactly this
+pattern.
+
+## Locale switcher
+
+`useLocale()` returns the active locale, the full locale list, and a
+`setLocale` that navigates to the equivalent URL — same logical route,
+different prefix.
+
+```tsx
+import { useLocale } from "bundoc/theme";
+
+function LocaleSwitcher() {
+  const { locale, locales, setLocale } = useLocale();
+  return (
+    <div>
+      {locales.map((l) => (
+        <button
+          key={l}
+          aria-current={l === locale}
+          onClick={() => setLocale(l)}
+        >
+          {l.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+
+`setLocale("de")` from `/about` navigates to `/de/about`. From `/`,
+it navigates to `/de`. The default locale always navigates back to the
+unprefixed URL.
+
+## Per-locale search
+
+The build-time search index is built per locale — there's one
+`<locale>.bin` file in `dist/_bundoc/search/`. The
+[`useSearchIndex()`](/api/hooks#useSearchIndex) hook lazy-fetches the
+index for the *active* locale, so a German user only ever pays for
+the German index.
+
+<Callout type="info">
+  Locales are opaque BCP-47 codes to bundoc. We don't translate the UI
+  for you — that's your theme's job. We just route, fall back, and
+  index.
+</Callout>

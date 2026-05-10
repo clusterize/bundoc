@@ -1,0 +1,107 @@
+---
+title: Search
+description: Build-time Orama indexes, the useSearchIndex hook, and why no server.
+sidebar:
+  order: 5
+---
+
+# Search
+
+bundoc ships with full-text search baked into the build. There is no
+server runtime, no third-party SaaS, and no JavaScript bundle penalty
+on the first paint — the search engine and the index lazy-load when
+the user opens the search palette.
+
+## How it works
+
+At build time, bundoc walks every MDX file and:
+
+<Steps>
+  <Step>
+    Parses the MDX into MDAST and extracts plaintext per
+    *heading section* (the prose between one heading and the next).
+  </Step>
+  <Step>
+    Slugifies each heading via
+    [`github-slugger`](https://github.com/Flet/github-slugger) so the
+    anchors match `rehype-slug`'s output exactly.
+  </Step>
+  <Step>
+    Builds an [Orama](https://docs.orama.com) BM25 index with typo
+    tolerance and persists it to
+    `dist/_bundoc/search/<locale>.bin`.
+  </Step>
+</Steps>
+
+## Querying from your theme
+
+`useSearchIndex()` returns a lazy client. The first `query()` call
+fetches and restores the index for the active locale; subsequent
+queries are in-memory.
+
+```tsx
+import { useEffect, useState } from "react";
+import { useSearchIndex, type SearchHit } from "bundoc/theme";
+
+function SearchBox() {
+  const { query, loading, error } = useSearchIndex();
+  const [term, setTerm] = useState("");
+  const [hits, setHits] = useState<SearchHit[]>([]);
+
+  useEffect(() => {
+    if (!term) return setHits([]);
+    const t = setTimeout(async () => {
+      setHits(await query(term, { limit: 10, tolerance: 1 }));
+    }, 80);
+    return () => clearTimeout(t);
+  }, [term, query]);
+
+  return (
+    <div>
+      <input value={term} onChange={(e) => setTerm(e.target.value)} />
+      {loading ? "…" : null}
+      {error ? <p>{String(error)}</p> : null}
+      <ul>
+        {hits.map((h) => (
+          <li key={`${h.route}#${h.anchor}`}>
+            <a href={`${h.route}#${h.anchor}`}>{h.heading || h.title}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+Each hit is shaped like:
+
+```ts
+type SearchHit = {
+  route: string;     // logical route (no basePath, no locale prefix)
+  locale: string;    // hit's source locale
+  title: string;     // page title
+  heading: string;   // section heading text (or "" for the page itself)
+  anchor: string;    // slug to deep-link via #anchor
+  text: string;      // section body snippet
+  score: number;     // Orama relevance
+};
+```
+
+## Why a static index?
+
+A static index ships with the static build, so:
+
+- the site stays CDN-deployable, with no server runtime;
+- the search engine works offline;
+- the index version always matches the deployed content (no
+  re-index race after a release).
+
+The trade-off is index size. For typical docs sites the per-locale
+index is around 25 KB gzipped. The runtime fetches it lazily, so the
+first paint isn't blocked.
+
+## Roadmap: vector search
+
+The current index is BM25 + typo tolerance. The planned shape for
+embeddings is `search.semantic.embedder` in
+`bundoc.config.ts` — see [the roadmap](/reference/roadmap).

@@ -1,0 +1,5 @@
+{
+  "installation": { "label": "Installation", "order": 0 },
+  "project-structure": { "label": "Project structure", "order": 1 },
+  "first-page": { "label": "Your first page", "order": 2 }
+}

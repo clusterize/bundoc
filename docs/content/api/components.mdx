@@ -1,0 +1,67 @@
+---
+title: Components
+description: PageOutlet and Link — the public components from bundoc/theme.
+sidebar:
+  order: 2
+---
+
+# Components
+
+Two public components ship with `bundoc/theme`. Everything else is up
+to you.
+
+## `<PageOutlet>`
+
+Renders the active route's MDX. Place it once in your theme, wherever
+the article body should appear.
+
+```tsx
+import { PageOutlet } from "bundoc/theme";
+
+<PageOutlet
+  fallback={<p>Loading…</p>}
+  notFound={<NotFound />}
+  errorFallback={<ErrorPage />}
+/>
+```
+
+| Prop | Type | When it shows |
+|------|------|---------------|
+| `fallback` | `ReactNode` | While the page module is loading. |
+| `notFound` | `ReactNode` | Route doesn't exist for the active locale. |
+| `errorFallback` | `ReactNode` | The page module errored on import. |
+
+`<PageOutlet>` is the only place that triggers MDX module loading —
+everything else (sidebars, TOCs, prev/next) is static metadata from
+the manifest.
+
+## `<Link>`
+
+Locale-aware, basePath-aware client-side navigation.
+
+```tsx
+import { Link } from "bundoc/theme";
+
+<Link to="/api/hooks" className="…">
+  API hooks
+</Link>
+```
+
+`<Link>` extends the props of `<a>` but takes `to` instead of `href`.
+It:
+
+- prepends `basePath` (set via [config](/api/config#basepath));
+- prepends the active locale prefix when non-default;
+- intercepts left-click and routes via the SPA navigator;
+- passes through modifier-clicks (cmd-click, middle-click) so the
+  user gets a real new-tab navigation when they ask for it;
+- forwards `className`, `onClick`, `aria-*`, etc.
+
+If you need an href without rendering, use
+[`useLink().href()`](/api/hooks#useLink).
+
+<Callout type="warn" title="Don't use raw &lt;a&gt; for in-app links">
+  Internal `<a href="/foo">` won't be locale-aware and won't avoid a
+  full page reload. Always use `<Link to="/foo">` for links inside the
+  SPA.
+</Callout>

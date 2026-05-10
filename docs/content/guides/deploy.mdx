@@ -1,0 +1,108 @@
+---
+title: Deploy
+description: Static output layout and SPA-fallback rewrite rules per platform.
+sidebar:
+  order: 7
+---
+
+# Deploy
+
+`bundoc build` emits a fully-static `dist/`. Serve it from any CDN.
+The only platform-specific concern is wiring up an SPA fallback so
+deep links resolve to the same `index.html`.
+
+## Build output
+
+```
+dist/
+├── index.html              # SPA shell
+├── chunk-*.js              # code-split route chunks
+├── chunk-*.css             # bundled CSS
+└── _bundoc/
+    └── search/
+        ├── en.bin          # per-locale Orama indexes
+        └── de.bin
+```
+
+Every URL the SPA owns must be served `index.html`, except for the
+`/_bundoc/search/*.bin` files (those are real binary assets the
+runtime fetches lazily) and any literal asset under the root.
+
+## Cloudflare Pages
+
+```toml title="wrangler.toml"
+[build]
+command = "bunx bundoc build"
+cwd = "."
+publish = "dist"
+```
+
+Cloudflare auto-handles SPA fallback with a `_redirects` file:
+
+```text title="dist/_redirects"
+/_bundoc/*  /_bundoc/:splat   200
+/*          /index.html       200
+```
+
+## Netlify
+
+```toml title="netlify.toml"
+[build]
+command = "bunx bundoc build"
+publish = "dist"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+```
+
+## Vercel (static)
+
+`vercel.json`:
+
+```json title="vercel.json"
+{
+  "buildCommand": "bunx bundoc build",
+  "outputDirectory": "dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
+```
+
+## GitHub Pages
+
+GitHub Pages doesn't support rewrites natively. Workarounds:
+
+- Use a hash-based router (bundoc doesn't currently support this).
+- Or use a `404.html` that copies `index.html` so the SPA picks up
+  deep links via the 404 path:
+
+  ```bash
+  cp dist/index.html dist/404.html
+  ```
+
+## Plain CDN (S3, Caddy, nginx)
+
+Configure the server to fall back to `/index.html` on any 404:
+
+```nginx
+location / {
+  try_files $uri /index.html;
+}
+```
+
+## `basePath`
+
+If the site lives at a sub-path, set `basePath` in `bundoc.config.ts`
+*and* deploy under the same prefix:
+
+```ts title="bundoc.config.ts"
+export default defineConfig({
+  // ...
+  basePath: "/docs",
+});
+```
+
+`<Link>` and `useLink().href()` prepend the prefix automatically. The
+search runtime fetches indexes from `${basePath}/_bundoc/search/...`,
+so the same prefix has to be live on the deploy.

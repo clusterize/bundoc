@@ -1,0 +1,71 @@
+---
+title: Project structure
+description: Tour of a freshly scaffolded bundoc project.
+sidebar:
+  order: 1
+---
+
+# Project structure
+
+A scaffolded project looks like this:
+
+```
+my-docs/
+├── bundoc.config.ts        # locales, defaultLocale, paths
+├── bunfig.toml             # bun-plugin-tailwind, peer = false
+├── package.json            # bundoc as a peer dep
+├── content/                # your MDX
+│   ├── index.mdx           # → /
+│   ├── index.de.mdx        # → /de
+│   └── faq/
+│       ├── _meta.json      # ordering / labels
+│       └── installation.mdx
+└── theme/
+    ├── index.tsx           # default-export <ThemeApp/>
+    ├── mdx-components.tsx  # optional: MDX tag overrides
+    └── styles.css          # Tailwind entry, your CSS
+```
+
+Each top-level folder has a clear job.
+
+## `bundoc.config.ts`
+
+The single source of truth for project-wide settings. See the
+[config reference](/api/config) for every field.
+
+## `content/`
+
+Where your MDX lives. Filenames map to routes; locale suffixes split
+translations. See [Writing content](/guides/writing-content) and
+[Routing](/guides/routing).
+
+## `theme/`
+
+Your theme is a normal React app. `theme/index.tsx` default-exports
+the root component, and bundoc renders it inside a router.
+[Writing a theme](/guides/theme) walks through the contract.
+
+## `.bundoc/cache/`
+
+bundoc compiles MDX into a working directory at `.bundoc/cache/`. It's
+gitignored. You don't normally read or edit it, but it helps to know
+what's in there:
+
+| File | Purpose |
+|------|---------|
+| `manifest.ts` | Virtual manifest with importer thunks per (route × locale). |
+| `pages/*.tsx` | Compiled MDX shims, one per source file. |
+| `search/<locale>.bin` | Persisted Orama search index. |
+| `entry.tsx` | Browser entrypoint that calls `mountBundoc(...)`. |
+| `theme.tsx` | Re-exports your theme module. |
+| `mdx-components.tsx` | Re-exports your MDX components map (or `{}`). |
+| `index.html` | SPA shell that imports `entry.tsx`. |
+
+The dev server watches your `content/` and `theme/`, recompiles
+single MDX files on change, and rebuilds the manifest when files are
+added or removed.
+
+<Callout type="tip">
+  Delete `.bundoc/` whenever you suspect stale cache. It rebuilds on
+  the next dev/build.
+</Callout>

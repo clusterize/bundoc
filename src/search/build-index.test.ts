@@ -38,7 +38,7 @@ test("build → persist → restore → search roundtrip", async () => {
     const r = await search(db, { term: "installation", properties: ["title", "heading", "text"] });
     expect(r.count).toBeGreaterThan(0);
     const routes = new Set(r.hits.map((h) => (h.document as unknown as { route: string }).route));
-    expect(routes.has("/faq/installation")).toBe(true);
+    expect(routes.has("/getting-started/installation")).toBe(true);
 
     // Typo tolerance: 1-char delete should still match.
     const fuzzy = await search(db, { term: "instalation", tolerance: 1 });

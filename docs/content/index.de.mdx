@@ -1,24 +1,28 @@
 ---
 title: bundoc
-description: Ein Bun-natives CLI für MDX-Doku-Seiten.
+description: Ein Bun-natives CLI für MDX-Doku-Seiten. Der Inhalt ist .mdx, das Theme deine React-App.
 sidebar:
   order: 0
 ---
 
-# bundoc
+# MDX-Doku. Bun-nativ. Du baust das Theme.
 
-Ein **Bun-natives** CLI für MDX-Dokumentationsseiten, bei dem der *Inhalt* `.mdx` ist und das *Theme* eine React-App, die dir gehört.
+bundoc liefert die Content-Pipeline, den Router, die Suche und ein
+kleines Set an Hooks. **Du** lieferst das Theme — jedes gerenderte
+Pixel ist dein React-Code, kein blackbox-Skin.
 
-## Was du bekommst
-
-- Dateisystem-Routing von MDX in einem `content/`-Ordner.
-- Eingebaute i18n via Suffix `<name>.<locale>.mdx` im Dateinamen.
-- Ein vom Nutzer geliefertes Theme, das Routing via Hooks konsumiert.
+```bash
+bunx bundoc init meine-docs
+cd meine-docs && bun install && bunx bundoc dev
+```
 
 ## Schnellstart
 
-```bash
-bunx bundoc dev
-```
+Bearbeite eine beliebige `.mdx`-Datei in `content/` und die Seite lädt
+per HMR neu. Das ist der ganze Loop.
 
-Das war's. Bearbeite eine beliebige `.mdx`-Datei in `content/` und die Seite lädt per HMR neu.
+<Callout type="info" title="Hinweis">
+  Die englische Version dieser Seite ist die kanonische Quelle.
+  Auf Seiten ohne deutsche Übersetzung zeigt bundoc das Original mit
+  einem Banner.
+</Callout>

@@ -19,14 +19,16 @@ test("buildManifest: all locales resolvable, fallback flagged when needed", asyn
     basePath: "/",
   });
 
-  expect(Object.keys(manifest.routes).sort()).toEqual(["/", "/about", "/faq/installation"]);
+  // Root has both locales; no fallback flag.
   expect(manifest.routes["/"]!.en).toBeDefined();
   expect(manifest.routes["/"]!.de).toBeDefined();
   expect(manifest.routes["/"]!.en!.fallback).toBeUndefined();
   expect(manifest.routes["/"]!.de!.fallback).toBeUndefined();
-  // /about is English-only; /de should fall back.
-  expect(manifest.routes["/about"]!.de!.fallback).toBe(true);
-  expect(manifest.routes["/about"]!.en!.fallback).toBeUndefined();
+  // English-only routes fall back to English when the German locale asks.
+  const installation = manifest.routes["/getting-started/installation"];
+  expect(installation).toBeDefined();
+  expect(installation!.en!.fallback).toBeUndefined();
+  expect(installation!.de!.fallback).toBe(true);
   expect(manifest.order.en!.length).toBeGreaterThan(0);
   expect(manifest.order.de!.length).toBeGreaterThan(0);
 });

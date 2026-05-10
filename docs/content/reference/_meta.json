@@ -1,0 +1,5 @@
+{
+  "frontmatter": { "label": "Frontmatter", "order": 0 },
+  "meta-json": { "label": "_meta.json", "order": 1 },
+  "roadmap": { "label": "Roadmap", "order": 2 }
+}

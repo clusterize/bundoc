@@ -1,0 +1,81 @@
+---
+title: Routing
+description: File-system rules, _meta.json ordering, basePath, locale-aware Link.
+sidebar:
+  order: 1
+---
+
+# Routing
+
+Routing in bundoc is entirely file-system driven. There is no router
+config and no manifest you author by hand.
+
+## File-system rules
+
+A few simple rules cover every case:
+
+- A folder's `index.mdx` becomes the route for that folder.
+- Sibling files become routes within that folder.
+- A leading `_` excludes a file or folder from routing.
+- A locale suffix (`foo.de.mdx`) attaches a translation to an existing
+  route.
+
+See the [filename → route table](/guides/writing-content#filename--route)
+in *Writing content* for the full list of cases.
+
+## Ordering and labels
+
+Sidebar order comes from two sources, in this priority:
+
+<Steps>
+  <Step>
+    **`_meta.json` in the folder** — explicit per-segment overrides:
+
+    ```json
+    { "installation": { "order": 0, "label": "Installation" } }
+    ```
+  </Step>
+  <Step>
+    **`sidebar.order` in frontmatter** — falls back to numerical order;
+    ties break alphabetically by label.
+  </Step>
+</Steps>
+
+The same rules drive the `prev`/`next` navigation exposed via
+[`useNav()`](/api/hooks#useNav).
+
+## `basePath`
+
+If you host the site under a sub-path (like `/docs/`), set
+`basePath` in `bundoc.config.ts`:
+
+```ts title="bundoc.config.ts"
+export default defineConfig({
+  // ...
+  basePath: "/docs",
+});
+```
+
+bundoc strips the prefix on incoming requests and re-adds it when
+emitting hrefs. Internal links via `<Link>` and `useLink().href()` are
+basePath-aware automatically.
+
+## The Link helper
+
+```tsx
+import { Link } from "bundoc/theme";
+
+<Link to="/api/hooks">API hooks</Link>
+```
+
+`<Link>` is a thin wrapper around `<a>`:
+
+- prepends the `basePath`
+- prepends the active locale prefix when the locale is non-default
+- intercepts left-click and routes via the SPA navigator
+- still respects modifier-clicks (cmd-click → new tab)
+
+Always prefer `<Link>` over a raw `<a>` for in-app links. Use
+[`useLink()`](/api/hooks#useLink) when you need to compute an href
+without rendering a tag (e.g. to pre-format the value of an
+`<option>`).

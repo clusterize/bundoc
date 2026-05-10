@@ -1,0 +1,65 @@
+---
+title: Frontmatter
+description: Supported frontmatter fields with types, defaults, and effects.
+sidebar:
+  order: 0
+---
+
+# Frontmatter
+
+Every MDX page may have YAML frontmatter at the top:
+
+```mdx
+---
+title: My page
+description: A short summary.
+sidebar:
+  order: 2
+  label: Custom label
+---
+
+# Heading
+```
+
+## Supported fields
+
+| Field | Type | Default | Effect |
+|-------|------|---------|--------|
+| `title` | `string` | derived from filename | Page title; populates `useCurrentPage().title`. Themes typically render this in `<title>` and the article header. |
+| `description` | `string` | — | Free-form summary; render in `<meta name="description">`. Not currently consumed by bundoc itself. |
+| `sidebar.order` | `number` | `0` | Position in the sidebar (lower first; ties break alphabetically). |
+| `sidebar.label` | `string` | derived from filename | Override the auto-derived sidebar label. |
+
+Anything else is preserved verbatim and surfaces via
+[`useFrontmatter<T>()`](/api/hooks#useFrontmatter):
+
+```mdx
+---
+title: Release notes
+date: 2025-01-15
+authors: ["alice", "bob"]
+tags: ["release"]
+---
+```
+
+```tsx
+const fm = useFrontmatter<{
+  date?: string;
+  authors?: string[];
+  tags?: string[];
+}>();
+```
+
+## Title derivation
+
+If `title` is omitted, bundoc derives one from the route's last
+segment by humanising it:
+
+| Route | Derived title |
+|-------|---------------|
+| `/` | `Home` |
+| `/about` | `About` |
+| `/getting-started/first-page` | `First Page` |
+| `/api/some-thing` | `Some Thing` |
+
+If you want full control, set `title` explicitly.
