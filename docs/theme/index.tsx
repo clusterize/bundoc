@@ -67,7 +67,10 @@ export default function ThemeApp() {
               </div>
             ) : null}
 
-            <article className="bundoc-prose max-w-3xl">
+            <article
+              key={`${nav.currentPath}-${locale}`}
+              className="bundoc-prose max-w-3xl page-fade"
+            >
               <PageOutlet
                 fallback={
                   <p className="text-muted-foreground">Loading…</p>
