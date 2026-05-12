@@ -45,7 +45,7 @@ test("parseFilename: dotted name (not a locale) is preserved", () => {
 });
 
 test("discoverContent: docs/content groups by route + locale", async () => {
-  const contentDir = resolve(import.meta.dir, "../../docs/content");
+  const contentDir = resolve(import.meta.dir, "../../../docs/content");
   const { routes } = await discoverContent({
     contentDir,
     locales: ["en", "de"],

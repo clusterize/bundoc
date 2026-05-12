@@ -67,4 +67,4 @@ and `PLAN.md`.
 
 ## License
 
-MIT — see `LICENSE` (when added).
+MIT

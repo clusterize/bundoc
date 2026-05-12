@@ -3,7 +3,7 @@ import { startDevServer } from "../server/dev-server.ts";
 import { resolve } from "node:path";
 import { rm } from "node:fs/promises";
 
-const docsDir = resolve(import.meta.dir, "../../docs");
+const docsDir = resolve(import.meta.dir, "../../../docs");
 const port = 6451;
 
 let server: Awaited<ReturnType<typeof startDevServer>> | undefined;

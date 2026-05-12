@@ -7,15 +7,10 @@ import {
   recompileSingle,
   cachePaths,
 } from "./cache.ts";
-import { dedupeReactPlugin } from "./dedupe-react.ts";
 
 export async function startDevServer(opts: { port: number; host: string }) {
   const config = await loadConfig();
   const paths = await regenerateAll({ config, development: true });
-
-  // Pin react/react-dom to the consumer's install so the bundler doesn't
-  // double-load them (one from bundoc/node_modules, one from <consumer>/node_modules).
-  Bun.plugin(await dedupeReactPlugin(config.rootDir));
 
   // Bun.serve's HTML import requires a static path; we already wrote the
   // shell to the cache. Dynamic-import it at runtime so the bundler picks

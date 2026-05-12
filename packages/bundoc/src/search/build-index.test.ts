@@ -9,7 +9,7 @@ import { restore } from "@orama/plugin-data-persistence";
 import { search } from "@orama/orama";
 
 test("build → persist → restore → search roundtrip", async () => {
-  const contentDir = resolve(import.meta.dir, "../../docs/content");
+  const contentDir = resolve(import.meta.dir, "../../../docs/content");
   const discovery = await discoverContent({
     contentDir,
     locales: ["en", "de"],
@@ -49,7 +49,7 @@ test("build → persist → restore → search roundtrip", async () => {
 }, 10_000);
 
 test("German index searches German content", async () => {
-  const contentDir = resolve(import.meta.dir, "../../docs/content");
+  const contentDir = resolve(import.meta.dir, "../../../docs/content");
   const discovery = await discoverContent({
     contentDir,
     locales: ["en", "de"],

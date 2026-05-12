@@ -16,24 +16,30 @@ router, search, and a small set of hooks; the theme renders.
 
 ## Repo layout
 
-- `src/cli/` — argv dispatch + per-command entry (dev/build/preview/init).
-- `src/config/` — `defineConfig` + `loadConfig` (reads `bundoc.config.ts`).
-- `src/content/` — content discovery (filename → route, locale parsing) and
-  manifest building (tree + flat map + prev/next + fallback synthesis).
-- `src/mdx/` — MDX compile pipeline (`@mdx-js/mdx` + remark/rehype defaults
-  + custom `rehypeCollectHeadings`). Also a Bun bundler plugin that few
-  paths actually use.
-- `src/runtime/` — providers (Manifest, RouteMatch, MdxComponents,
-  PageModule), the ~150-line CSR router, and `mountBundoc` (the entry).
-- `src/theme/` — public hooks/components (`useNav`, `useLocale`,
-  `useCurrentPage`, `useTOC`, `useLink`, `useSearchIndex`, `<Link>`).
-  Re-exported via the `bundoc/theme` subpath export.
-- `src/search/` — plaintext extractor (MDAST) + per-locale Orama indexer.
-- `src/server/` — dev server (Bun.serve + watcher), static build
-  (Bun.build), preview, cache writer.
-- `src/scaffold/` — `bundoc init` templates.
-- `docs/` — the public docs site AND the integration-test target. Doubles
-  as the canonical example consumer of bundoc.
+Bun workspace. Repo root is private and only hosts the `packages/*` glob;
+each member is a real package with its own `package.json`.
+
+- `packages/bundoc/` — the published library/CLI.
+  - `src/cli/` — argv dispatch + per-command entry (dev/build/preview/init).
+  - `src/config/` — `defineConfig` + `loadConfig` (reads `bundoc.config.ts`).
+  - `src/content/` — content discovery (filename → route, locale parsing) and
+    manifest building (tree + flat map + prev/next + fallback synthesis).
+  - `src/mdx/` — MDX compile pipeline (`@mdx-js/mdx` + remark/rehype defaults
+    + custom `rehypeCollectHeadings`). Also a Bun bundler plugin that few
+    paths actually use.
+  - `src/runtime/` — providers (Manifest, RouteMatch, MdxComponents,
+    PageModule), the ~150-line CSR router, and `mountBundoc` (the entry).
+  - `src/theme/` — public hooks/components (`useNav`, `useLocale`,
+    `useCurrentPage`, `useTOC`, `useLink`, `useSearchIndex`, `<Link>`).
+    Re-exported via the `bundoc/theme` subpath export.
+  - `src/search/` — plaintext extractor (MDAST) + per-locale Orama indexer.
+  - `src/server/` — dev server (Bun.serve + watcher), static build
+    (Bun.build), preview, cache writer.
+  - `src/scaffold/` — `bundoc init` templates.
+- `packages/docs/` — the public docs site AND the integration-test target.
+  Doubles as the canonical example consumer of bundoc. Depends on
+  `"bundoc": "workspace:*"` so edits to `packages/bundoc/src/` are picked
+  up live (no install snapshot in between).
 
 ## Key non-obvious things
 
@@ -48,23 +54,14 @@ router, search, and a small set of hooks; the theme renders.
   (persisted Orama indexes), `entry.tsx`/`theme.tsx`/`mdx-components.tsx`
   (synthesized shims), `index.html` (SPA shell). Bun.serve uses these
   directly; Bun.build entrypoints from `index.html`.
-- **React dedupe**: when a project consumes bundoc via `file:..` linking
-  (docs/ does), Bun auto-installs peer deps in BOTH locations and
-  React ends up loaded twice → "Invalid hook call". The fix is `peer =
-  false` in the consumer's `bunfig.toml` so the bundler resolves a single
-  React via path-walk to bundoc's install. See `src/server/dedupe-react.ts`
-  for the fallback plugin (Bun.serve's HTML bundler ignores
-  `Bun.plugin()`, so the dedupe plugin is informational only — the real
-  fix is the bunfig switch).
-- **`file:..` snapshot trap**: `docs/node_modules/bundoc` is a symlink to
-  `<repo>/node_modules/.bun/bundoc@root/node_modules/bundoc/` — Bun's
-  content-addressed *snapshot* of the bundoc source at install time, NOT
-  the live `src/` tree. Edits to `src/runtime/*` (and other bundoc files)
-  will NOT appear in the bundled output until the snapshot is refreshed.
-  When debugging "my change isn't taking effect", first run
-  `rm -rf node_modules/.bun docs/node_modules docs/bun.lock && cd docs && bun install`
-  to rebuild the snapshot. (`bun install --force` from the repo root may
-  also work depending on the Bun version.)
+- **Workspace symlink, not snapshot**: `packages/docs/node_modules/bundoc`
+  resolves via the Bun workspace protocol (`"bundoc": "workspace:*"`) to
+  the live `packages/bundoc/` directory. Edits there are immediately
+  visible in the docs build with no reinstall. Prior to the
+  `packages/{bundoc,docs}` split the docs consumed bundoc via `file:..`,
+  which made Bun create a content-addressed snapshot under
+  `node_modules/.bun/bundoc@root/...` and broke this feedback loop — do
+  not reintroduce `file:` references between workspace members.
 - **bunfig plugin loader**: `Bun.serve` auto-loads
   `[serve.static].plugins`; `Bun.build` does NOT. `src/server/load-bunfig-plugins.ts`
   bridges this so Tailwind etc. apply to `bundoc build` too.
@@ -79,8 +76,9 @@ router, search, and a small set of hooks; the theme renders.
 ## Tests
 
 Co-located: `foo.ts` next to `foo.test.ts`. Integration tests for the dev
-server live in `src/__tests__/dev-integration.test.ts`. Run all: `bun
-test`. Typecheck: `bunx tsc -p . --noEmit`. Both should be green before
+server live in `packages/bundoc/src/__tests__/dev-integration.test.ts`.
+Run all: `bun test` from the repo root. Typecheck:
+`bunx tsc -p packages/bundoc --noEmit`. Both should be green before
 committing.
 
 When changing the manifest shape or content discovery, update the docs

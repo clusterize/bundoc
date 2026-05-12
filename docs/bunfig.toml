@@ -1,7 +1,0 @@
-[serve.static]
-plugins = ["bun-plugin-tailwind"]
-
-[install]
-# Don't auto-install peer deps from `bundoc`; rely on path-walk to its single
-# React install so the bundled app doesn't end up with two React copies.
-peer = false

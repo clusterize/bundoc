@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { discoverContent } from "./discover.ts";
 import { buildManifest, emitManifestModule } from "./manifest.ts";
 
-const contentDir = resolve(import.meta.dir, "../../docs/content");
+const contentDir = resolve(import.meta.dir, "../../../docs/content");
 
 test("buildManifest: all locales resolvable, fallback flagged when needed", async () => {
   const discovery = await discoverContent({
