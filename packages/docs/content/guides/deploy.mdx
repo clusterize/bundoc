@@ -20,13 +20,13 @@ dist/
 ├── chunk-*.css             # bundled CSS
 └── _bundoc/
     └── search/
-        ├── en.bin          # per-locale Orama indexes
-        └── de.bin
+        ├── en.json         # per-locale Orama indexes
+        └── de.json
 ```
 
 Every URL the SPA owns must be served `index.html`, except for the
-`/_bundoc/search/*.bin` files (those are real binary assets the
-runtime fetches lazily) and any literal asset under the root.
+`/_bundoc/search/*.json` files (real assets the runtime fetches
+lazily) and any literal asset under the root.
 
 ## Cloudflare Pages
 

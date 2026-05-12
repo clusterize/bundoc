@@ -55,7 +55,7 @@ what's in there:
 |------|---------|
 | `manifest.ts` | Virtual manifest with importer thunks per (route × locale). |
 | `pages/*.tsx` | Compiled MDX shims, one per source file. |
-| `search/<locale>.bin` | Persisted Orama search index. |
+| `search/<locale>.json` | Persisted Orama search index (JSON via `save`/`load`). |
 | `entry.tsx` | Browser entrypoint that calls `mountBundoc(...)`. |
 | `theme.tsx` | Re-exports your theme module. |
 | `mdx-components.tsx` | Re-exports your MDX components map (or `{}`). |

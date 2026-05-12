@@ -4,9 +4,14 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { discoverContent } from "../content/discover.ts";
 import { buildManifest } from "../content/manifest.ts";
-import { buildSearchIndexes } from "./build-index.ts";
-import { restore } from "@orama/plugin-data-persistence";
-import { search } from "@orama/orama";
+import { buildSearchIndexes, ORAMA_SCHEMA } from "./build-index.ts";
+import { create, load, search } from "@orama/orama";
+
+function restoreJson(json: string) {
+  const db = create({ schema: ORAMA_SCHEMA });
+  load(db, JSON.parse(json));
+  return db;
+}
 
 test("build → persist → restore → search roundtrip", async () => {
   const contentDir = resolve(import.meta.dir, "../../../docs/content");
@@ -34,7 +39,7 @@ test("build → persist → restore → search roundtrip", async () => {
 
     // Restore the EN index and search.
     const blob = await Bun.file(files.en!).text();
-    const db = await restore("binary", blob);
+    const db = restoreJson(blob);
     const r = await search(db, { term: "installation", properties: ["title", "heading", "text"] });
     expect(r.count).toBeGreaterThan(0);
     const routes = new Set(r.hits.map((h) => (h.document as unknown as { route: string }).route));
@@ -71,7 +76,7 @@ test("German index searches German content", async () => {
       outDir: out,
     });
     const blob = await Bun.file(files.de!).text();
-    const db = await restore("binary", blob);
+    const db = restoreJson(blob);
     // "Schnellstart" only appears in the German content.
     const r = await search(db, { term: "Schnellstart" });
     expect(r.count).toBeGreaterThan(0);

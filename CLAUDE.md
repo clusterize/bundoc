@@ -50,7 +50,7 @@ each member is a real package with its own `package.json`.
   shims. Watcher recompiles single files on `change`, rebuilds the
   manifest on add/remove.
 - **`.bundoc/cache/` is the build product**: `manifest.ts` (the virtual
-  manifest), `pages/*.tsx` (compiled MDX), `search/<locale>.bin`
+  manifest), `pages/*.tsx` (compiled MDX), `search/<locale>.json`
   (persisted Orama indexes), `entry.tsx`/`theme.tsx`/`mdx-components.tsx`
   (synthesized shims), `index.html` (SPA shell). Bun.serve uses these
   directly; Bun.build entrypoints from `index.html`.
@@ -69,9 +69,12 @@ each member is a real package with its own `package.json`.
   others prefixed (`/de/foo`). Locale parsing happens at filename level
   (`foo.de.mdx`) and route resolution.
 - **Search indexes are static files**: build-time Orama indexes (one per
-  locale, ~25 KB) live at `dist/_bundoc/search/<locale>.bin`. The
-  runtime hook `useSearchIndex()` lazy-fetches and queries client-side.
-  Fully offline, no server runtime.
+  locale, plain JSON via `@orama/orama`'s own `save`/`load`) live at
+  `dist/_bundoc/search/<locale>.json`. The runtime hook
+  `useSearchIndex()` lazy-fetches and queries client-side. Fully offline,
+  no server runtime. We persist as JSON (not msgpack/binary) on purpose:
+  it avoids pulling `@orama/plugin-data-persistence` + `@msgpack/msgpack`
+  into the client bundle, and the wire size after gzip is comparable.
 
 ## Tests
 

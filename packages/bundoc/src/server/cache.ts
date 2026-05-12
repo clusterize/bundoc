@@ -10,7 +10,7 @@ export type CachePaths = {
   /** `.bundoc/cache/` absolute. */
   dir: string;
   pagesDir: string;
-  /** Where per-locale search indexes are persisted (`<locale>.bin`). */
+  /** Where per-locale search indexes are persisted (`<locale>.json`). */
   searchDir: string;
   manifestPath: string;
   themePath: string;

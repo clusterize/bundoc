@@ -48,7 +48,7 @@ export async function runBuild(opts: { out: string }) {
     await cp(publicDir, outDir, { recursive: true });
   }
 
-  // Copy persisted search indexes to dist/_bundoc/search/.
+  // Copy persisted search indexes (one JSON file per locale) to dist/_bundoc/search/.
   const searchSrc = cachePaths(config).searchDir;
   if (await dirExists(searchSrc)) {
     const searchDst = join(outDir, "_bundoc", "search");

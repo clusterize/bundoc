@@ -30,8 +30,9 @@ export async function startDevServer(opts: { port: number; host: string }) {
       "/_bundoc/search/:filename": (req) => {
         const safe = req.params.filename.replace(/[^a-zA-Z0-9._-]/g, "");
         const file = Bun.file(join(searchDir, safe));
+        const contentType = safe.endsWith(".json") ? "application/json" : "application/octet-stream";
         return new Response(file, {
-          headers: { "content-type": "application/octet-stream" },
+          headers: { "content-type": contentType },
         });
       },
       "/*": indexHtml.default,

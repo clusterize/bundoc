@@ -1,5 +1,4 @@
-import { create, insertMultiple } from "@orama/orama";
-import { persist } from "@orama/plugin-data-persistence";
+import { create, insertMultiple, save } from "@orama/orama";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { extractSearchable } from "./extract.ts";
@@ -39,7 +38,7 @@ export type SearchIndexFiles = {
 };
 
 /**
- * Build one Orama index per locale and persist to `outDir/<locale>.bin`.
+ * Build one Orama index per locale and persist to `outDir/<locale>.json`.
  * Reads each MDX source (we already have the path in the manifest), runs
  * the plaintext extractor, and inserts one row per heading-section.
  */
@@ -59,9 +58,9 @@ export async function buildSearchIndexes(opts: {
     if (docs.length > 0) {
       await insertMultiple(db, docs as unknown as Record<string, unknown>[]);
     }
-    const blob = await persist(db, "binary");
-    const out = join(outDir, `${locale}.bin`);
-    await Bun.write(out, blob);
+    const serialized = JSON.stringify(await save(db));
+    const out = join(outDir, `${locale}.json`);
+    await Bun.write(out, serialized);
     files[locale] = out;
   }
   return { files };

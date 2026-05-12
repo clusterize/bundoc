@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { restore } from "@orama/plugin-data-persistence";
-import { search as oramaSearch, type Orama } from "@orama/orama";
+import { create, load, search as oramaSearch, type Orama } from "@orama/orama";
 import { useManifest } from "../runtime/providers.tsx";
 import { useLocale } from "./hooks.ts";
 
@@ -48,7 +47,7 @@ const SCHEMA = {
 /** URL where the runtime expects to find the index for a given locale. */
 function indexUrl(locale: string, basePath: string): string {
   const prefix = basePath === "/" || basePath === "" ? "" : basePath;
-  return `${prefix}/_bundoc/search/${encodeURIComponent(locale)}.bin`;
+  return `${prefix}/_bundoc/search/${encodeURIComponent(locale)}.json`;
 }
 
 async function loadDb(locale: string, basePath: string): Promise<Orama<typeof SCHEMA>> {
@@ -59,8 +58,10 @@ async function loadDb(locale: string, basePath: string): Promise<Orama<typeof SC
     if (!res.ok) {
       throw new Error(`bundoc: failed to load search index for "${locale}" (${res.status})`);
     }
-    const blob = await res.text();
-    return (await restore("binary", blob)) as Orama<typeof SCHEMA>;
+    const data = await res.json();
+    const db = create({ schema: SCHEMA }) as Orama<typeof SCHEMA>;
+    load(db, data);
+    return db;
   })();
   dbCache.set(locale, promise);
   // Drop on failure so the next call can retry.

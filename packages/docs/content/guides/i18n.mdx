@@ -99,7 +99,7 @@ unprefixed URL.
 ## Per-locale search
 
 The build-time search index is built per locale — there's one
-`<locale>.bin` file in `dist/_bundoc/search/`. The
+`<locale>.json` file in `dist/_bundoc/search/`. The
 [`useSearchIndex()`](/api/hooks#useSearchIndex) hook lazy-fetches the
 index for the *active* locale, so a German user only ever pays for
 the German index.
