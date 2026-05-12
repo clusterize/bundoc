@@ -67,7 +67,7 @@ export function SearchDialog({
   };
 
   return (
-    <CommandDialog open={open} onOpenChange={onOpenChange}>
+    <CommandDialog open={open} onOpenChange={onOpenChange} shouldFilter={false}>
       <CommandInput
         placeholder="Search docs…"
         value={term}
@@ -88,26 +88,96 @@ export function SearchDialog({
 
         {hits.length > 0 ? (
           <CommandGroup heading="Results">
-            {hits.map((hit, i) => (
-              <CommandItem
-                key={`${hit.route}#${hit.anchor}-${i}`}
-                value={`${hit.route}#${hit.anchor}-${i}-${hit.heading || hit.title}`}
-                onSelect={() => select(hit)}
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">
-                    {hit.heading || hit.title}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {hit.heading ? `${hit.title} → ` : ""}
-                    {hit.route}
-                  </span>
-                </div>
-              </CommandItem>
-            ))}
+            {hits.map((hit, i) => {
+              const excerpt = buildExcerpt(hit.text, term);
+              return (
+                <CommandItem
+                  key={`${hit.route}#${hit.anchor}-${i}`}
+                  value={`${i}-${hit.route}#${hit.anchor}`}
+                  onSelect={() => select(hit)}
+                >
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-medium">
+                      {hit.heading || hit.title}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {hit.heading ? `${hit.title} → ` : ""}
+                      {hit.route}
+                    </span>
+                    {excerpt ? (
+                      <span className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        {excerpt.map((part, idx) =>
+                          part.match ? (
+                            <mark
+                              key={idx}
+                              className="rounded bg-yellow-200/60 px-0.5 text-foreground dark:bg-yellow-500/30"
+                            >
+                              {part.text}
+                            </mark>
+                          ) : (
+                            <span key={idx}>{part.text}</span>
+                          ),
+                        )}
+                      </span>
+                    ) : null}
+                  </div>
+                </CommandItem>
+              );
+            })}
           </CommandGroup>
         ) : null}
       </CommandList>
     </CommandDialog>
   );
+}
+
+type ExcerptPart = { text: string; match: boolean };
+
+/**
+ * Build a snippet around the first occurrence of `term` in `text`, with the
+ * matched span flagged for highlighting. Returns null when there's nothing
+ * useful to show (empty text or empty term).
+ */
+function buildExcerpt(text: string, term: string): ExcerptPart[] | null {
+  const body = (text ?? "").trim();
+  if (!body) return null;
+  const trimmedTerm = term.trim();
+  const WINDOW = 140;
+
+  // No term yet — just show the head of the section.
+  if (!trimmedTerm) {
+    const head = body.length > WINDOW ? body.slice(0, WINDOW).trimEnd() + "…" : body;
+    return [{ text: head, match: false }];
+  }
+
+  // Use the longest whitespace-split token for the highlight anchor; Orama
+  // tokenises queries, so any token match is a valid hit even if the literal
+  // phrase isn't present.
+  const tokens = trimmedTerm.split(/\s+/).filter(Boolean);
+  const lower = body.toLowerCase();
+  let bestIdx = -1;
+  let bestLen = 0;
+  for (const tok of tokens) {
+    const idx = lower.indexOf(tok.toLowerCase());
+    if (idx !== -1 && tok.length > bestLen) {
+      bestIdx = idx;
+      bestLen = tok.length;
+    }
+  }
+
+  if (bestIdx === -1) {
+    const head = body.length > WINDOW ? body.slice(0, WINDOW).trimEnd() + "…" : body;
+    return [{ text: head, match: false }];
+  }
+
+  const pad = Math.floor((WINDOW - bestLen) / 2);
+  const start = Math.max(0, bestIdx - pad);
+  const end = Math.min(body.length, bestIdx + bestLen + pad);
+  const prefix = start > 0 ? "…" : "";
+  const suffix = end < body.length ? "…" : "";
+  return [
+    { text: prefix + body.slice(start, bestIdx), match: false },
+    { text: body.slice(bestIdx, bestIdx + bestLen), match: true },
+    { text: body.slice(bestIdx + bestLen, end) + suffix, match: false },
+  ];
 }
