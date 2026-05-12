@@ -37,17 +37,11 @@ export function RouterProvider({ basePath, children }: { basePath: string; child
       window.history.pushState(null, "", url.pathname + url.search + url.hash);
     }
     setLoc({ pathname: url.pathname, search: url.search, hash: url.hash });
-    // Scroll to top on new navigation, unless there's a hash to anchor to.
-    if (!opts?.replace) {
-      if (url.hash) {
-        // Defer to allow page render before scrolling.
-        queueMicrotask(() => {
-          const el = document.getElementById(url.hash.slice(1));
-          if (el) el.scrollIntoView();
-        });
-      } else {
-        window.scrollTo(0, 0);
-      }
+    // Scroll-to-top for plain navigations. Hash scrolling is handled by
+    // `HashScrollEffect` in mount.tsx, which waits for the lazy-loaded
+    // page module to be ready before looking up the anchor element.
+    if (!opts?.replace && !url.hash) {
+      window.scrollTo(0, 0);
     }
   }, []);
 

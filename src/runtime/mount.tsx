@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import { StrictMode, type ComponentType } from "react";
 import { RouterProvider } from "./router.tsx";
 import { ManifestProvider, RouteMatchProvider, MdxComponentsProvider } from "./providers.tsx";
-import { PageModuleProvider } from "./page-module.tsx";
+import { PageModuleProvider, HashScrollEffect } from "./page-module.tsx";
 import type { Manifest } from "./types.ts";
 
 export type MountOptions = {
@@ -23,6 +23,7 @@ export function mountBundoc(opts: MountOptions): void {
         <RouterProvider basePath={manifest.basePath}>
           <RouteMatchProvider>
             <PageModuleProvider>
+              <HashScrollEffect />
               <MdxComponentsProvider components={mdxComponents}>
                 <ThemeApp />
               </MdxComponentsProvider>

@@ -56,6 +56,15 @@ router, search, and a small set of hooks; the theme renders.
   for the fallback plugin (Bun.serve's HTML bundler ignores
   `Bun.plugin()`, so the dedupe plugin is informational only — the real
   fix is the bunfig switch).
+- **`file:..` snapshot trap**: `docs/node_modules/bundoc` is a symlink to
+  `<repo>/node_modules/.bun/bundoc@root/node_modules/bundoc/` — Bun's
+  content-addressed *snapshot* of the bundoc source at install time, NOT
+  the live `src/` tree. Edits to `src/runtime/*` (and other bundoc files)
+  will NOT appear in the bundled output until the snapshot is refreshed.
+  When debugging "my change isn't taking effect", first run
+  `rm -rf node_modules/.bun docs/node_modules docs/bun.lock && cd docs && bun install`
+  to rebuild the snapshot. (`bun install --force` from the repo root may
+  also work depending on the Bun version.)
 - **bunfig plugin loader**: `Bun.serve` auto-loads
   `[serve.static].plugins`; `Bun.build` does NOT. `src/server/load-bunfig-plugins.ts`
   bridges this so Tailwind etc. apply to `bundoc build` too.

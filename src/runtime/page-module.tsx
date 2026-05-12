@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useRouteMatch } from "./providers.tsx";
+import { useRouter } from "./router.tsx";
 import type { MdxModule } from "./types.ts";
 
 type LoadState =
@@ -51,4 +52,28 @@ export function usePageModule(): MdxModule | null {
 
 export function usePageLoadState(): LoadState | null {
   return useContext(PageModuleContext);
+}
+
+/**
+ * Renders nothing. Scrolls to `location.hash`'s target whenever
+ * - the hash changes, or
+ * - the current page module transitions to `ready`
+ * (whichever happens last). This lets cross-page anchor navigation work
+ * without racing the lazy-load of the destination page chunk.
+ */
+export function HashScrollEffect(): null {
+  const { hash, pathname } = useRouter();
+  const state = usePageLoadState();
+  useEffect(() => {
+    if (!hash || state?.status !== "ready") return;
+    const id = decodeURIComponent(hash.slice(1));
+    if (!id) return;
+    // Wait one frame so the rendered markup actually has the element.
+    const raf = requestAnimationFrame(() => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView();
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [hash, pathname, state?.status]);
+  return null;
 }
