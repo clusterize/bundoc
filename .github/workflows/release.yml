@@ -28,6 +28,9 @@ jobs:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Upgrade npm to a version with trusted-publishing support
+        run: npm install -g npm@latest
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -37,8 +40,6 @@ jobs:
       - name: Test
         run: bun test
 
-      - name: Publish to npm
+      - name: Publish to npm (OIDC via trusted publisher)
         working-directory: packages/bundoc
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
