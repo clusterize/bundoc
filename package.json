@@ -7,9 +7,15 @@
   ],
   "scripts": {
     "test": "bun test",
-    "typecheck": "bunx tsc -p packages/bundoc --noEmit"
+    "typecheck": "bunx tsc -p packages/bundoc --noEmit",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.15"
+    "@biomejs/biome": "^2.4.15",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.4"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs,json,jsonc,css}": "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true"
   }
 }
