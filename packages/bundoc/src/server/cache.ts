@@ -1,8 +1,12 @@
-import { join, relative, sep, basename } from "node:path";
 import { mkdir } from "node:fs/promises";
+import { basename, join, relative, sep } from "node:path";
 import type { ResolvedConfig } from "../config/index.ts";
-import { discoverContent, type DiscoveryResult } from "../content/discover.ts";
-import { buildManifest, emitManifestModule, type Manifest } from "../content/manifest.ts";
+import { type DiscoveryResult, discoverContent } from "../content/discover.ts";
+import {
+  buildManifest,
+  emitManifestModule,
+  type Manifest,
+} from "../content/manifest.ts";
 import { compileMdx } from "../mdx/compile.ts";
 import { buildSearchIndexes } from "../search/build-index.ts";
 
@@ -41,7 +45,11 @@ export function cachePaths(config: ResolvedConfig): CachePaths {
 export async function rebuildContentCache(opts: {
   config: ResolvedConfig;
   development?: boolean;
-}): Promise<{ manifest: Manifest; paths: CachePaths; discovery: DiscoveryResult }> {
+}): Promise<{
+  manifest: Manifest;
+  paths: CachePaths;
+  discovery: DiscoveryResult;
+}> {
   const { config, development = false } = opts;
   const paths = cachePaths(config);
   await mkdir(paths.pagesDir, { recursive: true });
@@ -63,7 +71,9 @@ export async function rebuildContentCache(opts: {
     const shimName = shimFilename(entry.sourcePath);
     const shimPath = join(paths.pagesDir, shimName);
     sourceToShim.set(entry.sourcePath, shimPath);
-    compileTasks.push(compileSingle(entry.sourcePath, shimPath, development, highlighting));
+    compileTasks.push(
+      compileSingle(entry.sourcePath, shimPath, development, highlighting),
+    );
   }
   await Promise.all(compileTasks);
 
@@ -138,7 +148,12 @@ export async function recompileSingle(opts: {
   const { config, sourcePath, development = false } = opts;
   const paths = cachePaths(config);
   const shimPath = join(paths.pagesDir, shimFilename(sourcePath));
-  await compileSingle(sourcePath, shimPath, development, config.mdx.highlighting);
+  await compileSingle(
+    sourcePath,
+    shimPath,
+    development,
+    config.mdx.highlighting,
+  );
 }
 
 async function compileSingle(
@@ -162,12 +177,18 @@ function shimFilename(sourcePath: string): string {
 async function writeThemeShim(config: ResolvedConfig) {
   const paths = cachePaths(config);
   const rel = toImportSpec(paths.dir, config.themeEntry);
-  await Bun.write(paths.themePath, `export { default } from ${JSON.stringify(rel)};\n`);
+  await Bun.write(
+    paths.themePath,
+    `export { default } from ${JSON.stringify(rel)};\n`,
+  );
 }
 
 async function writeMdxComponentsShim(config: ResolvedConfig) {
   const paths = cachePaths(config);
-  if (config.mdxComponentsEntry && (await Bun.file(config.mdxComponentsEntry).exists())) {
+  if (
+    config.mdxComponentsEntry &&
+    (await Bun.file(config.mdxComponentsEntry).exists())
+  ) {
     const rel = toImportSpec(paths.dir, config.mdxComponentsEntry);
     await Bun.write(
       paths.mdxComponentsPath,
@@ -191,7 +212,10 @@ mountBundoc({ manifest, ThemeApp, mdxComponents });
   await Bun.write(paths.entryPath, src);
 }
 
-async function writeHtml(config: ResolvedConfig, opts: { title?: string } = {}) {
+async function writeHtml(
+  config: ResolvedConfig,
+  opts: { title?: string } = {},
+) {
   const paths = cachePaths(config);
   const title = opts.title ?? "bundoc";
   const html = `<!doctype html>
@@ -230,7 +254,7 @@ export async function regenerateAll(opts: {
 
 function toImportSpec(fromDir: string, target: string): string {
   let rel = relative(fromDir, target).split(sep).join("/");
-  if (!rel.startsWith(".")) rel = "./" + rel;
+  if (!rel.startsWith(".")) rel = `./${rel}`;
   return rel;
 }
 

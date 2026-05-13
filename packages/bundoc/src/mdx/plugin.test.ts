@@ -1,4 +1,4 @@
-import { test, expect, beforeAll } from "bun:test";
+import { beforeAll, expect, test } from "bun:test";
 import { mdxBunPlugin } from "./bun-plugin.ts";
 
 beforeAll(() => {
@@ -13,7 +13,12 @@ test("import .mdx fixture: default, frontmatter, headings all present", async ()
   expect(mod.frontmatter?.sidebar?.order).toBe(2);
   expect(Array.isArray(mod.headings)).toBe(true);
   const titles = mod.headings.map((h: { text: string }) => h.text);
-  expect(titles).toEqual(["Top heading", "Section one", "Nested", "Section two"]);
+  expect(titles).toEqual([
+    "Top heading",
+    "Section one",
+    "Nested",
+    "Section two",
+  ]);
   // ids populated by rehype-slug.
   for (const h of mod.headings) {
     expect(typeof h.id).toBe("string");

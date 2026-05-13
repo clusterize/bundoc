@@ -1,21 +1,22 @@
 // Public theme API. Themes import from `bundoc/theme`.
+
+export { PageOutlet } from "../runtime/outlet.tsx";
+export type { Heading, ManifestRouteEntry, NavNode } from "../runtime/types.ts";
+export type {
+  CurrentPage,
+  UseLink,
+  UseLocaleResult,
+  UseNavResult,
+} from "./hooks.ts";
 export {
-  useLocale,
-  useNav,
-  useTOC,
   useCurrentPage,
   useFrontmatter,
   useLink,
+  useLocale,
+  useNav,
+  useTOC,
 } from "./hooks.ts";
-export type {
-  UseLocaleResult,
-  UseNavResult,
-  CurrentPage,
-  UseLink,
-} from "./hooks.ts";
-export { useSearchIndex } from "./search.ts";
-export type { SearchHit, SearchClient } from "./search.ts";
-export { Link } from "./Link.tsx";
 export type { LinkProps } from "./Link.tsx";
-export { PageOutlet } from "../runtime/outlet.tsx";
-export type { NavNode, Heading, ManifestRouteEntry } from "../runtime/types.ts";
+export { Link } from "./Link.tsx";
+export type { SearchClient, SearchHit } from "./search.ts";
+export { useSearchIndex } from "./search.ts";

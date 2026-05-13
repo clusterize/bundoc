@@ -1,15 +1,15 @@
+import { type SearchHit, useLink, useSearchIndex } from "bundoc/theme";
+import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useSearchIndex, useLink, type SearchHit } from "bundoc/theme";
+import { Button } from "@/components/ui/button";
 import {
   CommandDialog,
-  CommandInput,
-  CommandList,
   CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
 
 export function SearchTrigger({ onClick }: { onClick: () => void }) {
   return (
@@ -92,6 +92,7 @@ export function SearchDialog({
               const excerpt = buildExcerpt(hit.text, term);
               return (
                 <CommandItem
+                  // biome-ignore lint/suspicious/noArrayIndexKey: index disambiguates duplicate route+anchor hits
                   key={`${hit.route}#${hit.anchor}-${i}`}
                   value={`${i}-${hit.route}#${hit.anchor}`}
                   onSelect={() => select(hit)}
@@ -109,13 +110,19 @@ export function SearchDialog({
                         {excerpt.map((part, idx) =>
                           part.match ? (
                             <mark
+                              // biome-ignore lint/suspicious/noArrayIndexKey: excerpt is a deterministic split, never reordered
                               key={idx}
                               className="rounded bg-yellow-200/60 px-0.5 text-foreground dark:bg-yellow-500/30"
                             >
                               {part.text}
                             </mark>
                           ) : (
-                            <span key={idx}>{part.text}</span>
+                            <span
+                              // biome-ignore lint/suspicious/noArrayIndexKey: excerpt is a deterministic split, never reordered
+                              key={idx}
+                            >
+                              {part.text}
+                            </span>
                           ),
                         )}
                       </span>
@@ -146,7 +153,8 @@ function buildExcerpt(text: string, term: string): ExcerptPart[] | null {
 
   // No term yet — just show the head of the section.
   if (!trimmedTerm) {
-    const head = body.length > WINDOW ? body.slice(0, WINDOW).trimEnd() + "…" : body;
+    const head =
+      body.length > WINDOW ? `${body.slice(0, WINDOW).trimEnd()}…` : body;
     return [{ text: head, match: false }];
   }
 
@@ -166,7 +174,8 @@ function buildExcerpt(text: string, term: string): ExcerptPart[] | null {
   }
 
   if (bestIdx === -1) {
-    const head = body.length > WINDOW ? body.slice(0, WINDOW).trimEnd() + "…" : body;
+    const head =
+      body.length > WINDOW ? `${body.slice(0, WINDOW).trimEnd()}…` : body;
     return [{ text: head, match: false }];
   }
 

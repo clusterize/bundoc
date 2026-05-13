@@ -1,6 +1,6 @@
-import { type ReactNode } from "react";
-import { useRouteMatch, useMdxComponents } from "./providers.tsx";
+import type { ReactNode } from "react";
 import { usePageLoadState } from "./page-module.tsx";
+import { useMdxComponents, useRouteMatch } from "./providers.tsx";
 
 /**
  * Renders the MDX page for the current route. Reads the loaded module from
@@ -22,7 +22,15 @@ export function PageOutlet({
   if (match.notFound || !match.entry) return <>{notFound}</>;
   if (!state || state.status === "loading") return <>{fallback}</>;
   if (state.status === "error") {
-    return <>{errorFallback ? errorFallback(state.error) : <DefaultErrorPanel error={state.error} />}</>;
+    return (
+      <>
+        {errorFallback ? (
+          errorFallback(state.error)
+        ) : (
+          <DefaultErrorPanel error={state.error} />
+        )}
+      </>
+    );
   }
   const Page = state.mod.default;
   return <Page components={components} />;
@@ -38,9 +46,17 @@ function DefaultNotFound() {
 }
 
 function DefaultErrorPanel({ error }: { error: unknown }) {
-  const msg = error instanceof Error ? error.stack ?? error.message : String(error);
+  const msg =
+    error instanceof Error ? (error.stack ?? error.message) : String(error);
   return (
-    <div style={{ padding: "1rem", border: "1px solid #f00", color: "#900", whiteSpace: "pre-wrap" }}>
+    <div
+      style={{
+        padding: "1rem",
+        border: "1px solid #f00",
+        color: "#900",
+        whiteSpace: "pre-wrap",
+      }}
+    >
       <strong>Error loading page</strong>
       <pre>{msg}</pre>
     </div>

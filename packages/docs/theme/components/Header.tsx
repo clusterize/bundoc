@@ -5,8 +5,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ThemeToggle } from "./ThemeToggle";
 import { SearchTrigger } from "./SearchDialog";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function Header({
   onOpenSidebar,
@@ -37,7 +37,10 @@ export function Header({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            role="img"
+            aria-label="Menu"
           >
+            <title>Menu</title>
             <line x1="4" y1="6" x2="20" y2="6" />
             <line x1="4" y1="12" x2="20" y2="12" />
             <line x1="4" y1="18" x2="20" y2="18" />

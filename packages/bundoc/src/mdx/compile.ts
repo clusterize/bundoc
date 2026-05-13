@@ -1,10 +1,11 @@
 import { compile as mdxCompile } from "@mdx-js/mdx";
-import remarkFrontmatter from "remark-frontmatter";
-import remarkMdxFrontmatter from "remark-mdx-frontmatter";
-import remarkGfm from "remark-gfm";
-import rehypeSlug from "rehype-slug";
-import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeShiki from "@shikijs/rehype";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeSlug from "rehype-slug";
+import remarkFrontmatter from "remark-frontmatter";
+import remarkGfm from "remark-gfm";
+import remarkMdxFrontmatter from "remark-mdx-frontmatter";
+import type { PluggableList } from "unified";
 import { rehypeCollectHeadings } from "./headings.ts";
 
 export type HighlightingConfig = false | { light: string; dark: string };
@@ -22,9 +23,12 @@ export type CompileOptions = {
  * - frontmatter: object (via remark-mdx-frontmatter)
  * - headings: HeadingItem[] (via rehypeCollectHeadings)
  */
-export async function compileMdx(source: string, opts: CompileOptions = {}): Promise<string> {
+export async function compileMdx(
+  source: string,
+  opts: CompileOptions = {},
+): Promise<string> {
   const highlighting = opts.highlighting ?? false;
-  const rehypePlugins: any[] = [
+  const rehypePlugins: PluggableList = [
     rehypeSlug,
     [rehypeAutolinkHeadings, { behavior: "wrap" }],
   ];

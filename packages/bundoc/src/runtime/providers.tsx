@@ -1,7 +1,7 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, type ReactNode, useContext, useMemo } from "react";
+import { type RouteMatch, resolveRoute } from "./route-resolver.ts";
+import { stripBasePath, useRouter } from "./router.tsx";
 import type { Manifest } from "./types.ts";
-import { resolveRoute, type RouteMatch } from "./route-resolver.ts";
-import { useRouter, stripBasePath } from "./router.tsx";
 
 const ManifestContext = createContext<Manifest | null>(null);
 const RouteMatchContext = createContext<RouteMatch | null>(null);
@@ -14,7 +14,11 @@ export function ManifestProvider({
   manifest: Manifest;
   children: ReactNode;
 }) {
-  return <ManifestContext.Provider value={manifest}>{children}</ManifestContext.Provider>;
+  return (
+    <ManifestContext.Provider value={manifest}>
+      {children}
+    </ManifestContext.Provider>
+  );
 }
 
 export function useManifest(): Manifest {
@@ -34,12 +38,17 @@ export function RouteMatchProvider({ children }: { children: ReactNode }) {
     const stripped = stripBasePath(pathname, basePath);
     return resolveRoute(stripped, manifest);
   }, [pathname, basePath, manifest]);
-  return <RouteMatchContext.Provider value={match}>{children}</RouteMatchContext.Provider>;
+  return (
+    <RouteMatchContext.Provider value={match}>
+      {children}
+    </RouteMatchContext.Provider>
+  );
 }
 
 export function useRouteMatch(): RouteMatch {
   const m = useContext(RouteMatchContext);
-  if (!m) throw new Error("useRouteMatch must be used inside <RouteMatchProvider>");
+  if (!m)
+    throw new Error("useRouteMatch must be used inside <RouteMatchProvider>");
   return m;
 }
 

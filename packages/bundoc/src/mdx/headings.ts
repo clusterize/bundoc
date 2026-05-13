@@ -1,6 +1,6 @@
-import { visit } from "unist-util-visit";
+import type { Element, Root, Text } from "hast";
 import type { Plugin } from "unified";
-import type { Root, Element, Text } from "hast";
+import { visit } from "unist-util-visit";
 
 export type HeadingItem = { id: string; text: string; level: number };
 

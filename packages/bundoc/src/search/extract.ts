@@ -1,10 +1,10 @@
+import GithubSlugger from "github-slugger";
+import type { Code, Heading, InlineCode, Root, Text } from "mdast";
 import { remark } from "remark";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
 import remarkMdx from "remark-mdx";
 import { visit } from "unist-util-visit";
-import GithubSlugger from "github-slugger";
-import type { Root, Heading, Text, InlineCode, Code } from "mdast";
 
 export type ExtractedDoc = {
   /** Plain title (from heading or frontmatter, best effort). */
@@ -25,7 +25,10 @@ const processor = remark()
  * parser only (no React/JSX evaluation). Code fences are kept (devs do
  * search for snippets), but JSX expressions are dropped.
  */
-export function extractSearchable(source: string, fallbackTitle: string): ExtractedDoc {
+export function extractSearchable(
+  source: string,
+  fallbackTitle: string,
+): ExtractedDoc {
   const tree = processor.parse(source) as Root;
 
   const sections: ExtractedDoc["sections"] = [];
@@ -40,7 +43,12 @@ export function extractSearchable(source: string, fallbackTitle: string): Extrac
       const h = node as Heading;
       const text = nodeText(h);
       if (h.depth === 1 && !title) title = text;
-      current = { id: slugger.slug(text), heading: text, level: h.depth, text: "" };
+      current = {
+        id: slugger.slug(text),
+        heading: text,
+        level: h.depth,
+        text: "",
+      };
       sections.push(current);
       bodyParts.push(text);
       continue;
@@ -49,7 +57,7 @@ export function extractSearchable(source: string, fallbackTitle: string): Extrac
     if (!text) continue;
     bodyParts.push(text);
     if (current) {
-      current.text = current.text ? current.text + "\n" + text : text;
+      current.text = current.text ? `${current.text}\n${text}` : text;
     } else {
       current = { id: "", heading: "", level: 0, text };
       sections.push(current);

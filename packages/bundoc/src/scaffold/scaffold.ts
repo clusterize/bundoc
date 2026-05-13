@@ -1,10 +1,12 @@
-import { resolve, join } from "node:path";
 import { mkdir, stat } from "node:fs/promises";
+import { join, resolve } from "node:path";
 
 export async function scaffold(dir: string) {
   const root = resolve(process.cwd(), dir);
   if (await fileExists(join(root, "bundoc.config.ts"))) {
-    console.error(`[bundoc] ${root} already contains a bundoc.config.ts. Aborting.`);
+    console.error(
+      `[bundoc] ${root} already contains a bundoc.config.ts. Aborting.`,
+    );
     process.exit(1);
   }
   await mkdir(join(root, "content"), { recursive: true });

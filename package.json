@@ -2,9 +2,14 @@
   "name": "bundoc-workspace",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "test": "bun test",
     "typecheck": "bunx tsc -p packages/bundoc --noEmit"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.15"
   }
 }

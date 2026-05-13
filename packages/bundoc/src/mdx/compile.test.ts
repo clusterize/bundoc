@@ -1,4 +1,4 @@
-import { test, expect } from "bun:test";
+import { expect, test } from "bun:test";
 import { compileMdx } from "./compile.ts";
 
 test("compileMdx: emits default + frontmatter + headings exports", async () => {

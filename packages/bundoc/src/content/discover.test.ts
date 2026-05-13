@@ -1,15 +1,21 @@
-import { test, expect } from "bun:test";
-import { parseFilename, discoverContent } from "./discover.ts";
+import { expect, test } from "bun:test";
 import { resolve } from "node:path";
+import { discoverContent, parseFilename } from "./discover.ts";
 
 const locales = new Set(["en", "de"]);
 
 test("parseFilename: index.mdx → /", () => {
-  expect(parseFilename("index.mdx", locales)).toEqual({ route: "/", locale: undefined });
+  expect(parseFilename("index.mdx", locales)).toEqual({
+    route: "/",
+    locale: undefined,
+  });
 });
 
 test("parseFilename: locale-suffixed root index", () => {
-  expect(parseFilename("index.de.mdx", locales)).toEqual({ route: "/", locale: "de" });
+  expect(parseFilename("index.de.mdx", locales)).toEqual({
+    route: "/",
+    locale: "de",
+  });
 });
 
 test("parseFilename: nested file", () => {

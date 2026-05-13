@@ -1,8 +1,12 @@
+import { type ComponentType, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { StrictMode, type ComponentType } from "react";
+import { HashScrollEffect, PageModuleProvider } from "./page-module.tsx";
+import {
+  ManifestProvider,
+  MdxComponentsProvider,
+  RouteMatchProvider,
+} from "./providers.tsx";
 import { RouterProvider } from "./router.tsx";
-import { ManifestProvider, RouteMatchProvider, MdxComponentsProvider } from "./providers.tsx";
-import { PageModuleProvider, HashScrollEffect } from "./page-module.tsx";
 import type { Manifest } from "./types.ts";
 
 export type MountOptions = {

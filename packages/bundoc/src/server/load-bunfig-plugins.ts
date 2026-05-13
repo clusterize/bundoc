@@ -1,5 +1,5 @@
-import type { BunPlugin } from "bun";
 import { join } from "node:path";
+import type { BunPlugin } from "bun";
 
 /**
  * Read `bunfig.toml` from `rootDir` and load any plugins declared under
@@ -14,7 +14,10 @@ export async function loadBunfigPlugins(rootDir: string): Promise<BunPlugin[]> {
   const bunfigPath = join(rootDir, "bunfig.toml");
   if (!(await Bun.file(bunfigPath).exists())) return [];
 
-  let bunfig: { serve?: { static?: { plugins?: string[] } }; bundle?: { plugins?: string[] } };
+  let bunfig: {
+    serve?: { static?: { plugins?: string[] } };
+    bundle?: { plugins?: string[] };
+  };
   try {
     // Bun supports importing `.toml` directly.
     const mod = (await import(bunfigPath)) as { default?: typeof bunfig };
@@ -40,10 +43,17 @@ export async function loadBunfigPlugins(rootDir: string): Promise<BunPlugin[]> {
       const plugin = mod.default ?? mod;
       // Some plugins export a factory; call it if it's a function.
       const instance = typeof plugin === "function" ? plugin() : plugin;
-      if (instance && typeof instance === "object" && "name" in instance && "setup" in instance) {
+      if (
+        instance &&
+        typeof instance === "object" &&
+        "name" in instance &&
+        "setup" in instance
+      ) {
         out.push(instance as BunPlugin);
       } else {
-        console.warn(`[bundoc] "${name}" did not export a BunPlugin (got ${typeof plugin})`);
+        console.warn(
+          `[bundoc] "${name}" did not export a BunPlugin (got ${typeof plugin})`,
+        );
       }
     } catch (err) {
       console.warn(`[bundoc] failed to load bunfig plugin "${name}":`, err);

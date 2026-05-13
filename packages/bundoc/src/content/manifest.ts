@@ -1,6 +1,6 @@
-import { join, dirname, relative, sep } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import { Glob } from "bun";
-import type { DiscoveryResult, DiscoveredEntry } from "./discover.ts";
+import type { DiscoveredEntry, DiscoveryResult } from "./discover.ts";
 
 export type Heading = { id: string; text: string; level: number };
 
@@ -52,9 +52,7 @@ export type Manifest = {
 
 type MetaJson = {
   /** Map of segment → label override or {label, order, hidden}. */
-  [key: string]:
-    | string
-    | { label?: string; order?: number; hidden?: boolean };
+  [key: string]: string | { label?: string; order?: number; hidden?: boolean };
 };
 
 /**
@@ -120,9 +118,7 @@ function toManifestEntry(
 ): ManifestRouteEntry {
   const fm = entry.frontmatter ?? {};
   const title =
-    typeof fm.title === "string"
-      ? fm.title
-      : deriveTitleFromRoute(entry.route);
+    typeof fm.title === "string" ? fm.title : deriveTitleFromRoute(entry.route);
   return {
     route: entry.route,
     locale,
@@ -136,12 +132,12 @@ function toManifestEntry(
 function deriveTitleFromRoute(route: string): string {
   if (route === "/") return "Home";
   const seg = route.split("/").filter(Boolean).pop() ?? "";
-  return seg
-    .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return seg.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-async function loadMetaFiles(contentDir: string): Promise<Map<string, MetaJson>> {
+async function loadMetaFiles(
+  contentDir: string,
+): Promise<Map<string, MetaJson>> {
   const out = new Map<string, MetaJson>();
   const glob = new Glob("**/_meta.json");
   for await (const file of glob.scan({ cwd: contentDir, dot: false })) {
@@ -156,12 +152,6 @@ async function loadMetaFiles(contentDir: string): Promise<Map<string, MetaJson>>
   }
   return out;
 }
-
-type RouteParts = {
-  /** Path segments excluding leading slash. `[]` for `/`. */
-  segments: string[];
-  /** The final segment used as a "name" in nav (for index.mdx, this is "" → category itself). */
-};
 
 function splitRoute(route: string): string[] {
   if (route === "/") return [];
@@ -213,7 +203,8 @@ function insertRoute(
   let cursor = root;
   let dirPath = "";
   for (let i = 0; i < segments.length; i++) {
-    const seg = segments[i]!;
+    const seg = segments[i];
+    if (seg === undefined) continue;
     const isLast = i === segments.length - 1;
     if (isLast) {
       // Leaf node — attach the route here.
@@ -230,7 +221,8 @@ function insertRoute(
         cursor.children.push({
           route: entry.route,
           label: segMeta.label ?? entry.title,
-          order: segMeta.order ?? numberOr(entry.frontmatter, "order", Infinity),
+          order:
+            segMeta.order ?? numberOr(entry.frontmatter, "order", Infinity),
           children: [],
           fallback: entry.fallback,
           seg,
@@ -286,7 +278,11 @@ function readSegMeta(
   return raw;
 }
 
-function numberOr(fm: Record<string, unknown>, key: string, fallback: number): number {
+function numberOr(
+  fm: Record<string, unknown>,
+  key: string,
+  fallback: number,
+): number {
   const v = fm[key];
   if (typeof v === "number") return v;
   // Check sidebar.order
@@ -360,17 +356,25 @@ export function emitManifestModule(opts: {
       Object.entries(manifest.routes).map(([route, byLocale]) => [
         route,
         Object.fromEntries(
-          Object.entries(byLocale).map(([locale, entry]) => [
-            locale,
-            {
-              route: entry.route,
-              locale: entry.locale,
-              importerKey: sourceToKey.get(entry.sourcePath)!,
-              frontmatter: entry.frontmatter,
-              title: entry.title,
-              fallback: entry.fallback ?? false,
-            },
-          ]),
+          Object.entries(byLocale).map(([locale, entry]) => {
+            const importerKey = sourceToKey.get(entry.sourcePath);
+            if (importerKey === undefined) {
+              throw new Error(
+                `bundoc: missing importer key for ${entry.sourcePath}`,
+              );
+            }
+            return [
+              locale,
+              {
+                route: entry.route,
+                locale: entry.locale,
+                importerKey,
+                frontmatter: entry.frontmatter,
+                title: entry.title,
+                fallback: entry.fallback ?? false,
+              },
+            ];
+          }),
         ),
       ]),
     ),
@@ -406,6 +410,6 @@ export const order = manifest.order;
 
 function toImportSpecifier(fromDir: string, target: string): string {
   let rel = relative(fromDir, target).split(sep).join("/");
-  if (!rel.startsWith(".")) rel = "./" + rel;
+  if (!rel.startsWith(".")) rel = `./${rel}`;
   return rel;
 }

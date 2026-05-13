@@ -7,6 +7,7 @@ export function Steps({ children }: { children: ReactNode }) {
     <ol className="!my-6 !list-none !p-0 space-y-6">
       {items.map((child, i) => (
         <li
+          // biome-ignore lint/suspicious/noArrayIndexKey: MDX children are static; order never changes after render
           key={i}
           className="relative grid grid-cols-[1.75rem_minmax(0,1fr)] gap-4 pl-0"
         >

@@ -1,5 +1,5 @@
+import { create, load, type Orama, search as oramaSearch } from "@orama/orama";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { create, load, search as oramaSearch, type Orama } from "@orama/orama";
 import { useManifest } from "../runtime/providers.tsx";
 import { useLocale } from "./hooks.ts";
 
@@ -23,7 +23,10 @@ export type SearchHit = {
 
 export type SearchClient = {
   /** Run a query against the loaded index. */
-  query: (term: string, opts?: { limit?: number; tolerance?: number }) => Promise<SearchHit[]>;
+  query: (
+    term: string,
+    opts?: { limit?: number; tolerance?: number },
+  ) => Promise<SearchHit[]>;
   /** True once the index for the current locale has been fetched + restored. */
   ready: boolean;
   /** True while a fetch is in-flight. */
@@ -50,13 +53,18 @@ function indexUrl(locale: string, basePath: string): string {
   return `${prefix}/_bundoc/search/${encodeURIComponent(locale)}.json`;
 }
 
-async function loadDb(locale: string, basePath: string): Promise<Orama<typeof SCHEMA>> {
+async function loadDb(
+  locale: string,
+  basePath: string,
+): Promise<Orama<typeof SCHEMA>> {
   let promise = dbCache.get(locale);
   if (promise) return promise;
   promise = (async () => {
     const res = await fetch(indexUrl(locale, basePath));
     if (!res.ok) {
-      throw new Error(`bundoc: failed to load search index for "${locale}" (${res.status})`);
+      throw new Error(
+        `bundoc: failed to load search index for "${locale}" (${res.status})`,
+      );
     }
     const data = await res.json();
     const db = create({ schema: SCHEMA }) as Orama<typeof SCHEMA>;
@@ -81,7 +89,9 @@ export function useSearchIndex(): SearchClient {
   const [error, setError] = useState<Error | null>(null);
   const [db, setDb] = useState<Orama<typeof SCHEMA> | null>(null);
 
-  // Reset state when the locale changes.
+  // Reset state when the locale changes. `locale` is the trigger, not a value
+  // read inside — biome's exhaustive-deps rule misreads this as redundant.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: locale is the intentional trigger
   useEffect(() => {
     setReady(false);
     setDb(null);
@@ -141,5 +151,8 @@ export function useSearchIndex(): SearchClient {
     [ensureLoaded],
   );
 
-  return useMemo(() => ({ query, ready, loading, error }), [query, ready, loading, error]);
+  return useMemo(
+    () => ({ query, ready, loading, error }),
+    [query, ready, loading, error],
+  );
 }

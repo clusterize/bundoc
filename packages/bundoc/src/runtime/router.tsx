@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 type RouterCtx = {
   /** Current pathname (no query, no hash). */
@@ -15,7 +22,13 @@ type RouterCtx = {
 
 const RouterContext = createContext<RouterCtx | null>(null);
 
-export function RouterProvider({ basePath, children }: { basePath: string; children: ReactNode }) {
+export function RouterProvider({
+  basePath,
+  children,
+}: {
+  basePath: string;
+  children: ReactNode;
+}) {
   const [loc, setLoc] = useState(() => readLocation());
 
   useEffect(() => {
@@ -32,7 +45,11 @@ export function RouterProvider({ basePath, children }: { basePath: string; child
       return;
     }
     if (opts?.replace) {
-      window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+      window.history.replaceState(
+        null,
+        "",
+        url.pathname + url.search + url.hash,
+      );
     } else {
       window.history.pushState(null, "", url.pathname + url.search + url.hash);
     }
@@ -53,7 +70,9 @@ export function RouterProvider({ basePath, children }: { basePath: string; child
     basePath,
   };
 
-  return <RouterContext.Provider value={ctx}>{children}</RouterContext.Provider>;
+  return (
+    <RouterContext.Provider value={ctx}>{children}</RouterContext.Provider>
+  );
 }
 
 export function useRouter(): RouterCtx {
@@ -77,10 +96,11 @@ function readLocation() {
 export function stripBasePath(pathname: string, basePath: string): string {
   if (basePath === "/" || basePath === "") return ensureLeadingSlash(pathname);
   if (pathname === basePath) return "/";
-  if (pathname.startsWith(basePath + "/")) return pathname.slice(basePath.length);
+  if (pathname.startsWith(`${basePath}/`))
+    return pathname.slice(basePath.length);
   return ensureLeadingSlash(pathname);
 }
 
 function ensureLeadingSlash(p: string): string {
-  return p.startsWith("/") ? p : "/" + p;
+  return p.startsWith("/") ? p : `/${p}`;
 }

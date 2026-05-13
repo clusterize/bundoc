@@ -37,7 +37,8 @@ function parseArgv(argv: string[]): Argv {
   const flags: Record<string, string | boolean> = {};
   const positional: string[] = [];
   for (let i = 0; i < rest.length; i++) {
-    const a = rest[i]!;
+    const a = rest[i];
+    if (a === undefined) continue;
     if (a.startsWith("--")) {
       const eq = a.indexOf("=");
       if (eq !== -1) {
@@ -68,7 +69,9 @@ async function main() {
     return;
   }
   if (flags.version || flags.v) {
-    const pkg = await Bun.file(new URL("../../package.json", import.meta.url)).json();
+    const pkg = await Bun.file(
+      new URL("../../package.json", import.meta.url),
+    ).json();
     console.log(pkg.version);
     return;
   }

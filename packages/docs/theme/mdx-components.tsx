@@ -1,6 +1,6 @@
 import { Callout } from "./components/Callout";
-import { Steps, Step } from "./components/Steps";
 import { Pre } from "./components/Pre";
+import { Step, Steps } from "./components/Steps";
 
 const components = {
   // Wrap <pre> so Shiki output gets a Copy button overlay and a filename

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { useTOC } from "bundoc/theme";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export function TOC() {
@@ -19,7 +19,9 @@ export function TOC() {
       (entries) => {
         const visible = entries
           .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+          .sort(
+            (a, b) => a.boundingClientRect.top - b.boundingClientRect.top,
+          )[0];
         if (visible) {
           setActive(visible.target.id);
         }
@@ -30,7 +32,7 @@ export function TOC() {
       },
     );
 
-    elements.forEach((el) => observer.observe(el));
+    for (const el of elements) observer.observe(el);
     return () => observer.disconnect();
   }, [headings]);
 

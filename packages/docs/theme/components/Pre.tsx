@@ -1,6 +1,6 @@
 import { Children, isValidElement, type ReactNode } from "react";
-import { CopyButton } from "./CopyButton";
 import { cn } from "@/lib/utils";
+import { CopyButton } from "./CopyButton";
 
 type PreProps = React.HTMLAttributes<HTMLPreElement> & {
   /** Filename tab — set with ```ts title="x.ts" in MDX. */

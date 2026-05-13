@@ -1,4 +1,4 @@
-import { test, expect } from "bun:test";
+import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import { discoverContent } from "./discover.ts";
 import { buildManifest, emitManifestModule } from "./manifest.ts";

@@ -1,7 +1,7 @@
-import { test, expect, beforeAll, afterAll } from "bun:test";
-import { startDevServer } from "../server/dev-server.ts";
-import { resolve } from "node:path";
+import { afterAll, beforeAll, expect, test } from "bun:test";
 import { rm } from "node:fs/promises";
+import { resolve } from "node:path";
+import { startDevServer } from "../server/dev-server.ts";
 
 const docsDir = resolve(import.meta.dir, "../../../docs");
 const port = 6451;
@@ -19,7 +19,9 @@ afterAll(async () => {
   server?.server.stop();
 });
 
-async function fetchText(path: string): Promise<{ status: number; body: string }> {
+async function fetchText(
+  path: string,
+): Promise<{ status: number; body: string }> {
   const r = await fetch(`http://localhost:${port}${path}`);
   return { status: r.status, body: await r.text() };
 }
@@ -61,7 +63,9 @@ test("compiled .tsx shims exist for each MDX source file", async () => {
   const { Glob } = Bun;
   const glob = new Glob("*.tsx");
   const found: string[] = [];
-  for await (const f of glob.scan({ cwd: resolve(docsDir, ".bundoc/cache/pages") })) {
+  for await (const f of glob.scan({
+    cwd: resolve(docsDir, ".bundoc/cache/pages"),
+  })) {
     found.push(f);
   }
   const sourceGlob = new Glob("**/*.mdx");
@@ -75,7 +79,9 @@ test("compiled .tsx shims exist for each MDX source file", async () => {
 
 test("search index files are served per locale", async () => {
   for (const locale of ["en", "de"]) {
-    const r = await fetch(`http://localhost:${port}/_bundoc/search/${locale}.json`);
+    const r = await fetch(
+      `http://localhost:${port}/_bundoc/search/${locale}.json`,
+    );
     expect(r.status).toBe(200);
     const buf = new Uint8Array(await r.arrayBuffer());
     expect(buf.byteLength).toBeGreaterThan(1024); // non-trivial index
@@ -90,6 +96,8 @@ test("search index round-trip: fetch → restore → query", async () => {
   load(db, data);
   const hits = await search(db, { term: "installation", tolerance: 1 });
   expect(hits.count).toBeGreaterThan(0);
-  const routes = new Set(hits.hits.map((h) => (h.document as unknown as { route: string }).route));
+  const routes = new Set(
+    hits.hits.map((h) => (h.document as unknown as { route: string }).route),
+  );
   expect(routes.has("/getting-started/installation")).toBe(true);
 });

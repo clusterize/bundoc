@@ -1,4 +1,4 @@
-import { test, expect } from "bun:test";
+import { expect, test } from "bun:test";
 import { extractSearchable } from "./extract.ts";
 
 test("extracts title, sections, body from MDX", () => {

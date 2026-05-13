@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { useRouteMatch } from "./providers.tsx";
 import { useRouter } from "./router.tsx";
 import type { MdxModule } from "./types.ts";
@@ -16,7 +22,10 @@ const PageModuleContext = createContext<LoadState | null>(null);
  */
 export function PageModuleProvider({ children }: { children: ReactNode }) {
   const match = useRouteMatch();
-  const [state, setState] = useState<LoadState>({ status: "loading", mod: null });
+  const [state, setState] = useState<LoadState>({
+    status: "loading",
+    mod: null,
+  });
   const importer = match.entry?.importer;
   const importerKey = match.entry?.importerKey;
 
@@ -42,7 +51,11 @@ export function PageModuleProvider({ children }: { children: ReactNode }) {
     };
   }, [importerKey, importer]);
 
-  return <PageModuleContext.Provider value={state}>{children}</PageModuleContext.Provider>;
+  return (
+    <PageModuleContext.Provider value={state}>
+      {children}
+    </PageModuleContext.Provider>
+  );
 }
 
 export function usePageModule(): MdxModule | null {
@@ -62,7 +75,7 @@ export function usePageLoadState(): LoadState | null {
  * without racing the lazy-load of the destination page chunk.
  */
 export function HashScrollEffect(): null {
-  const { hash, pathname } = useRouter();
+  const { hash } = useRouter();
   const state = usePageLoadState();
   useEffect(() => {
     if (!hash || state?.status !== "ready") return;
@@ -74,6 +87,6 @@ export function HashScrollEffect(): null {
       if (el) el.scrollIntoView();
     });
     return () => cancelAnimationFrame(raf);
-  }, [hash, pathname, state?.status]);
+  }, [hash, state?.status]);
   return null;
 }

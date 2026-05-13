@@ -1,7 +1,7 @@
-import { join, resolve, sep, basename } from "node:path";
-import { mkdir, rm, cp, stat } from "node:fs/promises";
+import { cp, mkdir, rm, stat } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { loadConfig } from "../config/index.ts";
-import { regenerateAll, cachePaths } from "./cache.ts";
+import { cachePaths, regenerateAll } from "./cache.ts";
 import { loadBunfigPlugins } from "./load-bunfig-plugins.ts";
 
 export async function runBuild(opts: { out: string }) {
@@ -62,7 +62,7 @@ export async function runBuild(opts: { out: string }) {
 
 function joinPublicPath(basePath: string): string {
   if (basePath === "/" || basePath === "") return "/";
-  return basePath.endsWith("/") ? basePath : basePath + "/";
+  return basePath.endsWith("/") ? basePath : `${basePath}/`;
 }
 
 async function dirExists(p: string): Promise<boolean> {

@@ -1,8 +1,8 @@
-import { create, insertMultiple, save } from "@orama/orama";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { extractSearchable } from "./extract.ts";
+import { create, insertMultiple, save } from "@orama/orama";
 import type { Manifest } from "../content/manifest.ts";
+import { extractSearchable } from "./extract.ts";
 
 export type IndexedDoc = {
   /** Stable id (route + locale + section index). */

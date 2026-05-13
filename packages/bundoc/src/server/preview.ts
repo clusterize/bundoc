@@ -1,13 +1,19 @@
-import { resolve, join } from "node:path";
 import { stat } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { loadConfig } from "../config/index.ts";
 
-export async function startPreviewServer(opts: { out: string; port: number; host: string }) {
+export async function startPreviewServer(opts: {
+  out: string;
+  port: number;
+  host: string;
+}) {
   const config = await loadConfig();
   const outDir = resolve(config.rootDir, opts.out);
 
   if (!(await dirExists(outDir))) {
-    console.error(`[bundoc] no build output at ${outDir}. Run \`bundoc build\` first.`);
+    console.error(
+      `[bundoc] no build output at ${outDir}. Run \`bundoc build\` first.`,
+    );
     process.exit(1);
   }
 

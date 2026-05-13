@@ -1,19 +1,19 @@
-import { useEffect, useState } from "react";
 import {
-  PageOutlet,
   Link,
-  useNav,
-  useLocale,
+  PageOutlet,
   useCurrentPage,
+  useLocale,
+  useNav,
 } from "bundoc/theme";
+import { useEffect, useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Header } from "./components/Header";
-import { Sidebar } from "./components/Sidebar";
-import { TOC } from "./components/TOC";
 import { PrevNext } from "./components/PrevNext";
 import { SearchDialog } from "./components/SearchDialog";
+import { Sidebar } from "./components/Sidebar";
+import { TOC } from "./components/TOC";
 import "./styles.css";
 
 export default function ThemeApp() {
@@ -72,9 +72,7 @@ export default function ThemeApp() {
               className="bundoc-prose max-w-3xl page-fade"
             >
               <PageOutlet
-                fallback={
-                  <p className="text-muted-foreground">Loading…</p>
-                }
+                fallback={<p className="text-muted-foreground">Loading…</p>}
                 notFound={
                   <div className="space-y-4">
                     <h1>404</h1>

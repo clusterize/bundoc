@@ -1,8 +1,8 @@
-import * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
 import { Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+import * as React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
@@ -25,7 +25,11 @@ interface CommandDialogProps extends React.ComponentProps<typeof Dialog> {
   shouldFilter?: boolean;
 }
 
-const CommandDialog = ({ children, shouldFilter, ...props }: CommandDialogProps) => (
+const CommandDialog = ({
+  children,
+  shouldFilter,
+  ...props
+}: CommandDialogProps) => (
   <Dialog {...props}>
     <DialogContent className="overflow-hidden p-0 shadow-2xl" showClose={false}>
       <Command
@@ -113,9 +117,9 @@ CommandItem.displayName = CommandPrimitive.Item.displayName;
 export {
   Command,
   CommandDialog,
-  CommandInput,
-  CommandList,
   CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
+  CommandList,
 };

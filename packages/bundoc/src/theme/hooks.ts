@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { useManifest, useRouteMatch } from "../runtime/providers.tsx";
-import { useRouter } from "../runtime/router.tsx";
 import { buildHref } from "../runtime/route-resolver.ts";
-import type { NavNode, Heading } from "../runtime/types.ts";
+import { useRouter } from "../runtime/router.tsx";
+import type { Heading, NavNode } from "../runtime/types.ts";
 
 export type UseLocaleResult = {
   locale: string;
@@ -53,10 +53,16 @@ export function useNav(): UseNavResult {
   const manifest = useManifest();
   const match = useRouteMatch();
   return useMemo<UseNavResult>(() => {
-    const tree = manifest.nav[match.locale] ?? { label: "", order: 0, children: [] };
+    const tree = manifest.nav[match.locale] ?? {
+      label: "",
+      order: 0,
+      children: [],
+    };
     const flat = manifest.order[match.locale] ?? [];
     const idx = flat.indexOf(match.route);
-    const titleAt = (route: string | undefined): { route: string; title: string } | null => {
+    const titleAt = (
+      route: string | undefined,
+    ): { route: string; title: string } | null => {
       if (!route) return null;
       const entry = manifest.routes[route]?.[match.locale];
       return entry ? { route, title: entry.title } : { route, title: route };
@@ -105,7 +111,9 @@ export function useCurrentPage(): CurrentPage {
   };
 }
 
-export function useFrontmatter<T extends Record<string, unknown> = Record<string, unknown>>(): T {
+export function useFrontmatter<
+  T extends Record<string, unknown> = Record<string, unknown>,
+>(): T {
   return useCurrentPage().frontmatter as T;
 }
 
@@ -116,7 +124,10 @@ export type UseLink = {
   /** Locale-aware href for a route. */
   href: (route: string, opts?: { locale?: string }) => string;
   /** Programmatic navigation (locale-aware). */
-  navigate: (route: string, opts?: { locale?: string; replace?: boolean }) => void;
+  navigate: (
+    route: string,
+    opts?: { locale?: string; replace?: boolean },
+  ) => void;
 };
 
 export function useLink(): UseLink {

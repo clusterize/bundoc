@@ -1,5 +1,5 @@
-import { test, expect } from "bun:test";
-import { resolveRoute, buildHref } from "./route-resolver.ts";
+import { expect, test } from "bun:test";
+import { buildHref, resolveRoute } from "./route-resolver.ts";
 import type { Manifest } from "./types.ts";
 
 const stub = (route: string, locale: string, fallback = false) => ({
@@ -26,7 +26,10 @@ const manifest: Manifest = {
       de: stub("/faq/installation", "de", true),
     },
   },
-  nav: { en: { label: "", order: 0, children: [] }, de: { label: "", order: 0, children: [] } },
+  nav: {
+    en: { label: "", order: 0, children: [] },
+    de: { label: "", order: 0, children: [] },
+  },
   order: { en: ["/", "/faq/installation"], de: ["/", "/faq/installation"] },
 };
 
@@ -57,20 +60,48 @@ test("resolveRoute: unknown path → notFound", () => {
 });
 
 test("buildHref: default locale unprefixed", () => {
-  expect(buildHref({ route: "/foo", locale: "en", defaultLocale: "en", basePath: "/" })).toBe("/foo");
-  expect(buildHref({ route: "/", locale: "en", defaultLocale: "en", basePath: "/" })).toBe("/");
+  expect(
+    buildHref({
+      route: "/foo",
+      locale: "en",
+      defaultLocale: "en",
+      basePath: "/",
+    }),
+  ).toBe("/foo");
+  expect(
+    buildHref({ route: "/", locale: "en", defaultLocale: "en", basePath: "/" }),
+  ).toBe("/");
 });
 
 test("buildHref: non-default locale prefixed", () => {
-  expect(buildHref({ route: "/foo", locale: "de", defaultLocale: "en", basePath: "/" })).toBe("/de/foo");
-  expect(buildHref({ route: "/", locale: "de", defaultLocale: "en", basePath: "/" })).toBe("/de");
+  expect(
+    buildHref({
+      route: "/foo",
+      locale: "de",
+      defaultLocale: "en",
+      basePath: "/",
+    }),
+  ).toBe("/de/foo");
+  expect(
+    buildHref({ route: "/", locale: "de", defaultLocale: "en", basePath: "/" }),
+  ).toBe("/de");
 });
 
 test("buildHref: with basePath", () => {
   expect(
-    buildHref({ route: "/foo", locale: "de", defaultLocale: "en", basePath: "/docs" }),
+    buildHref({
+      route: "/foo",
+      locale: "de",
+      defaultLocale: "en",
+      basePath: "/docs",
+    }),
   ).toBe("/docs/de/foo");
   expect(
-    buildHref({ route: "/", locale: "en", defaultLocale: "en", basePath: "/docs" }),
+    buildHref({
+      route: "/",
+      locale: "en",
+      defaultLocale: "en",
+      basePath: "/docs",
+    }),
   ).toBe("/docs");
 });

@@ -1,5 +1,5 @@
-import { Glob } from "bun";
 import { basename, dirname, join, relative, sep } from "node:path";
+import { Glob } from "bun";
 import matter from "gray-matter";
 
 export type DiscoveredEntry = {
@@ -94,7 +94,8 @@ export function parseFilename(
   localeSet: Set<string>,
 ): { route: string; locale: string | undefined } | undefined {
   // Strip extension
-  if (!relPath.endsWith(".mdx")) return { route: toRoute(relPath), locale: undefined };
+  if (!relPath.endsWith(".mdx"))
+    return { route: toRoute(relPath), locale: undefined };
   const noExt = relPath.slice(0, -4);
 
   // Detect locale suffix `.<loc>` on the basename.
@@ -111,13 +112,18 @@ export function parseFilename(
     } else {
       // Looks like a locale (`foo.xx.mdx`) but xx isn't in our list → invalid.
       // Heuristic: only treat as bad if the segment is short (2-5 chars).
-      if (candidate.length >= 2 && candidate.length <= 8 && /^[a-zA-Z][a-zA-Z0-9-]*$/.test(candidate)) {
+      if (
+        candidate.length >= 2 &&
+        candidate.length <= 8 &&
+        /^[a-zA-Z][a-zA-Z0-9-]*$/.test(candidate)
+      ) {
         return undefined;
       }
     }
   }
 
-  const finalRel = dir === "." ? nameWithoutLocale : `${dir}/${nameWithoutLocale}`;
+  const finalRel =
+    dir === "." ? nameWithoutLocale : `${dir}/${nameWithoutLocale}`;
   return { route: toRoute(finalRel), locale };
 }
 
@@ -126,8 +132,8 @@ function toRoute(relWithoutExt: string): string {
   const norm = relWithoutExt.split(sep).join("/");
   // index.mdx → directory
   if (norm === "index") return "/";
-  if (norm.endsWith("/index")) return "/" + norm.slice(0, -"/index".length);
-  return "/" + norm;
+  if (norm.endsWith("/index")) return `/${norm.slice(0, -"/index".length)}`;
+  return `/${norm}`;
 }
 
 function shouldIgnore(relPath: string): boolean {

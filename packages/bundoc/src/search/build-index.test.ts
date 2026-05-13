@@ -1,11 +1,11 @@
-import { test, expect } from "bun:test";
-import { resolve, join } from "node:path";
+import { expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { create, load, search } from "@orama/orama";
 import { discoverContent } from "../content/discover.ts";
 import { buildManifest } from "../content/manifest.ts";
 import { buildSearchIndexes, ORAMA_SCHEMA } from "./build-index.ts";
-import { create, load, search } from "@orama/orama";
 
 function restoreJson(json: string) {
   const db = create({ schema: ORAMA_SCHEMA });
@@ -40,9 +40,14 @@ test("build → persist → restore → search roundtrip", async () => {
     // Restore the EN index and search.
     const blob = await Bun.file(files.en!).text();
     const db = restoreJson(blob);
-    const r = await search(db, { term: "installation", properties: ["title", "heading", "text"] });
+    const r = await search(db, {
+      term: "installation",
+      properties: ["title", "heading", "text"],
+    });
     expect(r.count).toBeGreaterThan(0);
-    const routes = new Set(r.hits.map((h) => (h.document as unknown as { route: string }).route));
+    const routes = new Set(
+      r.hits.map((h) => (h.document as unknown as { route: string }).route),
+    );
     expect(routes.has("/getting-started/installation")).toBe(true);
 
     // Typo tolerance: 1-char delete should still match.

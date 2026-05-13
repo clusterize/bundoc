@@ -1,5 +1,5 @@
+import { AlertOctagon, AlertTriangle, Info, Lightbulb } from "lucide-react";
 import type { ReactNode } from "react";
-import { Info, AlertTriangle, AlertOctagon, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type CalloutType = "info" | "warn" | "danger" | "tip";

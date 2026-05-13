@@ -20,7 +20,7 @@ export function resolveRoute(pathname: string, manifest: Manifest): RouteMatch {
   const { locales, defaultLocale, routes } = manifest;
   const localeSet = new Set(locales);
   let path = pathname || "/";
-  if (!path.startsWith("/")) path = "/" + path;
+  if (!path.startsWith("/")) path = `/${path}`;
   // Trim trailing slash (except root).
   if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
 
@@ -29,14 +29,20 @@ export function resolveRoute(pathname: string, manifest: Manifest): RouteMatch {
     const firstSeg = path.split("/")[1];
     if (firstSeg && firstSeg !== defaultLocale && localeSet.has(firstSeg)) {
       locale = firstSeg;
-      path = "/" + path.split("/").slice(2).join("/");
+      path = `/${path.split("/").slice(2).join("/")}`;
       if (path === "" || path === "/") path = "/";
     }
   }
 
   const byLocale = routes[path];
   if (!byLocale) {
-    return { route: path, locale, fallback: false, notFound: true, entry: null };
+    return {
+      route: path,
+      locale,
+      fallback: false,
+      notFound: true,
+      entry: null,
+    };
   }
   const exact = byLocale[locale];
   if (exact) {
@@ -51,7 +57,13 @@ export function resolveRoute(pathname: string, manifest: Manifest): RouteMatch {
   // Should not happen if buildManifest synthesized fallbacks, but be defensive.
   const fallback = byLocale[defaultLocale];
   if (fallback) {
-    return { route: path, locale, fallback: true, notFound: false, entry: fallback };
+    return {
+      route: path,
+      locale,
+      fallback: true,
+      notFound: false,
+      entry: fallback,
+    };
   }
   return { route: path, locale, fallback: false, notFound: true, entry: null };
 }

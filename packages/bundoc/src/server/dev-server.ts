@@ -2,10 +2,10 @@ import { watch } from "node:fs";
 import { join } from "node:path";
 import { loadConfig, type ResolvedConfig } from "../config/index.ts";
 import {
-  regenerateAll,
+  cachePaths,
   rebuildContentCache,
   recompileSingle,
-  cachePaths,
+  regenerateAll,
 } from "./cache.ts";
 
 export async function startDevServer(opts: { port: number; host: string }) {
@@ -30,7 +30,9 @@ export async function startDevServer(opts: { port: number; host: string }) {
       "/_bundoc/search/:filename": (req) => {
         const safe = req.params.filename.replace(/[^a-zA-Z0-9._-]/g, "");
         const file = Bun.file(join(searchDir, safe));
-        const contentType = safe.endsWith(".json") ? "application/json" : "application/octet-stream";
+        const contentType = safe.endsWith(".json")
+          ? "application/json"
+          : "application/octet-stream";
         return new Response(file, {
           headers: { "content-type": contentType },
         });
@@ -64,30 +66,34 @@ function setupWatchers(config: ResolvedConfig) {
     }, 50);
   };
 
-  const watcher = watch(config.contentDir, { recursive: true }, async (event, filename) => {
-    if (!filename) return;
-    const isMdx = filename.endsWith(".mdx");
-    const isMeta = filename.endsWith("_meta.json");
-    if (!isMdx && !isMeta) return;
+  const watcher = watch(
+    config.contentDir,
+    { recursive: true },
+    async (event, filename) => {
+      if (!filename) return;
+      const isMdx = filename.endsWith(".mdx");
+      const isMeta = filename.endsWith("_meta.json");
+      if (!isMdx && !isMeta) return;
 
-    // For 'change' on an existing .mdx, just recompile that single file
-    // (no manifest changes). For 'rename' (add/remove) or _meta.json,
-    // rebuild the whole manifest.
-    if (event === "change" && isMdx) {
-      try {
-        await recompileSingle({
-          config,
-          sourcePath: join(config.contentDir, filename),
-          development: true,
-        });
-        console.log(`[bundoc] recompiled ${filename}`);
-      } catch (err) {
-        console.error(`[bundoc] failed to recompile ${filename}:`, err);
+      // For 'change' on an existing .mdx, just recompile that single file
+      // (no manifest changes). For 'rename' (add/remove) or _meta.json,
+      // rebuild the whole manifest.
+      if (event === "change" && isMdx) {
+        try {
+          await recompileSingle({
+            config,
+            sourcePath: join(config.contentDir, filename),
+            development: true,
+          });
+          console.log(`[bundoc] recompiled ${filename}`);
+        } catch (err) {
+          console.error(`[bundoc] failed to recompile ${filename}:`, err);
+        }
+      } else {
+        debouncedRebuild(`${event}: ${filename}`);
       }
-    } else {
-      debouncedRebuild(`${event}: ${filename}`);
-    }
-  });
+    },
+  );
 
   process.on("SIGINT", () => watcher.close());
 }

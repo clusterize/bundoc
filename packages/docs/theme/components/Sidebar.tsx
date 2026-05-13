@@ -14,9 +14,9 @@ export function Sidebar({
   return (
     <nav aria-label="Sidebar" className="text-sm">
       <ul className="space-y-1">
-        {nodes.map((n, i) => (
+        {nodes.map((n) => (
           <NavEntry
-            key={i}
+            key={n.route ?? n.label}
             node={n}
             currentRoute={currentRoute}
             depth={0}
@@ -39,14 +39,14 @@ function NavEntry({
   depth: number;
   onNavigate?: () => void;
 }) {
-  const isLeaf = !!node.route;
-  const isActive = node.route === currentRoute;
+  const leafRoute = node.route;
+  const isActive = leafRoute === currentRoute;
 
   return (
     <li>
-      {isLeaf ? (
+      {leafRoute ? (
         <Link
-          to={node.route!}
+          to={leafRoute}
           onClick={onNavigate}
           className={cn(
             "relative block rounded-md px-2 py-1 transition-colors hover:no-underline",
@@ -81,9 +81,9 @@ function NavEntry({
             depth === 0 ? "" : "border-l border-border pl-2",
           )}
         >
-          {node.children.map((c, i) => (
+          {node.children.map((c) => (
             <NavEntry
-              key={i}
+              key={c.route ?? c.label}
               node={c}
               currentRoute={currentRoute}
               depth={depth + 1}

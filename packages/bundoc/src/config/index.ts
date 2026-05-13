@@ -41,7 +41,9 @@ export type ResolvedMdxConfig = {
   highlighting: false | { light: string; dark: string };
 };
 
-export type ResolvedConfig = Required<Omit<BundocConfig, "mdxComponentsEntry" | "mdx">> & {
+export type ResolvedConfig = Required<
+  Omit<BundocConfig, "mdxComponentsEntry" | "mdx">
+> & {
   /** Absolute path to the project root (cwd at load time). */
   rootDir: string;
   /** Absolute path to content dir. */
@@ -70,7 +72,9 @@ const CONFIG_CANDIDATES = [
  * Locate and load the config file from `rootDir` (or cwd). Returns a
  * normalised `ResolvedConfig` with absolute paths.
  */
-export async function loadConfig(rootDir: string = process.cwd()): Promise<ResolvedConfig> {
+export async function loadConfig(
+  rootDir: string = process.cwd(),
+): Promise<ResolvedConfig> {
   const root = resolve(rootDir);
   let configPath: string | undefined;
   for (const name of CONFIG_CANDIDATES) {
@@ -94,9 +98,14 @@ export async function loadConfig(rootDir: string = process.cwd()): Promise<Resol
   return resolveConfig(raw, root);
 }
 
-export function resolveConfig(raw: BundocConfig, rootDir: string): ResolvedConfig {
+export function resolveConfig(
+  raw: BundocConfig,
+  rootDir: string,
+): ResolvedConfig {
   if (!raw.locales?.length) {
-    throw new Error("bundoc.config: `locales` must contain at least one locale");
+    throw new Error(
+      "bundoc.config: `locales` must contain at least one locale",
+    );
   }
   if (!raw.defaultLocale) {
     throw new Error("bundoc.config: `defaultLocale` is required");
@@ -142,7 +151,7 @@ function resolveMdxConfig(raw: BundocMdxConfig | undefined): ResolvedMdxConfig {
 }
 
 function normaliseBasePath(p: string): string {
-  if (!p.startsWith("/")) p = "/" + p;
+  if (!p.startsWith("/")) p = `/${p}`;
   if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
   return p;
 }
