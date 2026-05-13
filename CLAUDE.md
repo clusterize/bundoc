@@ -10,8 +10,6 @@ A Bun-native CLI for MDX documentation sites. The *content* is `.mdx`, the
 *theme* is a user-owned React app. bundoc supplies the content pipeline,
 router, search, and a small set of hooks; the theme renders.
 
-`PLAN.md` is the v1 design doc (read this before non-trivial changes).
-`DOCS_PLAN.md` is the handoff plan for building the public docs site.
 `README.md` is the user-facing entry point.
 
 ## Repo layout
