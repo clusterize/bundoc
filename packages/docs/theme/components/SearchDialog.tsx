@@ -1,4 +1,8 @@
-import { type SearchHit, useLink, useSearchIndex } from "bundoc/theme";
+import {
+  type SearchHit,
+  useLink,
+  useSearchIndex,
+} from "@clusterize/bundoc/theme";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";

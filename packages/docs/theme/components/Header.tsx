@@ -1,4 +1,4 @@
-import { Link, useLocale } from "bundoc/theme";
+import { Link, useLocale } from "@clusterize/bundoc/theme";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,

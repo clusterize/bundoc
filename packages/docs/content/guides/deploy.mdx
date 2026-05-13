@@ -32,7 +32,7 @@ lazily) and any literal asset under the root.
 
 ```toml title="wrangler.toml"
 [build]
-command = "bunx bundoc build"
+command = "bunx @clusterize/bundoc build"
 cwd = "."
 publish = "dist"
 ```
@@ -48,7 +48,7 @@ Cloudflare auto-handles SPA fallback with a `_redirects` file:
 
 ```toml title="netlify.toml"
 [build]
-command = "bunx bundoc build"
+command = "bunx @clusterize/bundoc build"
 publish = "dist"
 
 [[redirects]]
@@ -63,7 +63,7 @@ status = 200
 
 ```json title="vercel.json"
 {
-  "buildCommand": "bunx bundoc build",
+  "buildCommand": "bunx @clusterize/bundoc build",
   "outputDirectory": "dist",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

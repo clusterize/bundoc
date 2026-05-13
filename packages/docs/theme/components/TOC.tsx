@@ -1,4 +1,4 @@
-import { useTOC } from "bundoc/theme";
+import { useTOC } from "@clusterize/bundoc/theme";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
