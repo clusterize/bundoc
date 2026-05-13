@@ -23,9 +23,6 @@ bundoc/
 ├─ packages/
 │  ├─ bundoc/      # the published library + CLI
 │  └─ docs/        # bundoc.dev — also the canonical example consumer
-├─ PLAN.md         # internal v1 design doc
-├─ DOCS_PLAN.md    # docs-site handoff plan
-├─ PDF_PLAN.md     # planned `bundoc pdf` feature
 └─ CLAUDE.md       # repo conventions for AI coding agents
 ```
 
@@ -69,24 +66,6 @@ integration test lives at
   reliably honor `Bun.plugin()`-registered `.mdx` loaders. The watcher
   recompiles single files on change and rebuilds the manifest on
   add/remove.
-
----
-
-## Internal docs
-
-The `*_PLAN.md` files at the repo root are working design docs for
-features in progress. They are intentionally kept here (not in
-`packages/docs/`) because they describe bundoc's internals, not user
-behavior.
-
-- [PLAN.md](./PLAN.md) — v1 architecture and decisions. Read this
-  before non-trivial changes.
-- [DOCS_PLAN.md](./DOCS_PLAN.md) — design of the public docs site.
-- [PDF_PLAN.md](./PDF_PLAN.md) — proposed `bundoc pdf` command.
-- [PERSISTENCE_PLAN.md](./PERSISTENCE_PLAN.md) — record of the
-  msgpack → JSON switch for search indexes. Archived.
-
-User-facing documentation lives at [bundoc.dev](https://bundoc.dev).
 
 ---
 
