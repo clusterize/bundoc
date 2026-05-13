@@ -31,8 +31,15 @@
     "bundoc": "./src/cli/index.ts"
   },
   "files": [
-    "src",
-    "tsconfig.json"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.html",
+    "!src/**/*.test.ts",
+    "!src/**/*.test.tsx",
+    "!src/**/__tests__/**",
+    "!src/**/__fixtures__/**",
+    "LICENSE",
+    "README.md"
   ],
   "engines": {
     "bun": ">=1.3"
@@ -62,6 +69,11 @@
     "typescript": "^5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/bun": "latest",
