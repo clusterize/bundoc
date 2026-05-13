@@ -1,4 +1,4 @@
-import { defineConfig } from "bundoc/config";
+import { defineConfig } from "@clusterize/bundoc/config";
 
 export default defineConfig({
   locales: ["en", "de"],

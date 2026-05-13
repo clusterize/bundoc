@@ -14,7 +14,7 @@ export async function scaffold(dir: string) {
 
   await Bun.write(
     join(root, "bundoc.config.ts"),
-    `import { defineConfig } from "bundoc/config";
+    `import { defineConfig } from "@clusterize/bundoc/config";
 
 export default defineConfig({
   locales: ["en"],
@@ -37,7 +37,7 @@ Edit \`content/index.mdx\` and the page hot-reloads.
 
   await Bun.write(
     join(root, "theme", "index.tsx"),
-    `import { PageOutlet, Link, useNav, useCurrentPage, type NavNode } from "bundoc/theme";
+    `import { PageOutlet, Link, useNav, useCurrentPage, type NavNode } from "@clusterize/bundoc/theme";
 
 export default function ThemeApp() {
   const nav = useNav();
@@ -80,7 +80,7 @@ dist
   );
 
   console.log(`bundoc init → ${dir}`);
-  console.log(`Next: cd ${dir} && bunx bundoc dev`);
+  console.log(`Next: cd ${dir} && bunx @clusterize/bundoc dev`);
 }
 
 async function fileExists(p: string): Promise<boolean> {

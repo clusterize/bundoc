@@ -12,8 +12,8 @@ of hooks. **You** ship the theme — every pixel that renders is your
 React code, never an opaque skin we hand you.
 
 ```bash
-bunx bundoc init my-docs
-cd my-docs && bun install && bunx bundoc dev
+bunx @clusterize/bundoc init my-docs
+cd my-docs && bun install && bunx @clusterize/bundoc dev
 ```
 
 ## Three surfaces
@@ -21,7 +21,7 @@ cd my-docs && bun install && bunx bundoc dev
 The whole contract is three files. Here they are.
 
 ```ts title="bundoc.config.ts"
-import { defineConfig } from "bundoc/config";
+import { defineConfig } from "@clusterize/bundoc/config";
 
 export default defineConfig({
   locales: ["en", "de"],
@@ -45,7 +45,7 @@ controls the sidebar; headings build the TOC.
 ```
 
 ```tsx title="theme/index.tsx"
-import { PageOutlet, useNav, useCurrentPage } from "bundoc/theme";
+import { PageOutlet, useNav, useCurrentPage } from "@clusterize/bundoc/theme";
 
 export default function ThemeApp() {
   const { tree } = useNav();

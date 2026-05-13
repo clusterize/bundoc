@@ -1,4 +1,4 @@
-import { Link, type NavNode } from "bundoc/theme";
+import { Link, type NavNode } from "@clusterize/bundoc/theme";
 import { cn } from "@/lib/utils";
 
 export function Sidebar({

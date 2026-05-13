@@ -4,7 +4,7 @@ import {
   useCurrentPage,
   useLocale,
   useNav,
-} from "bundoc/theme";
+} from "@clusterize/bundoc/theme";
 import { useEffect, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";

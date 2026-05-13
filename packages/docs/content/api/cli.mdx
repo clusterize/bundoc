@@ -18,8 +18,8 @@ All commands read `bundoc.config.ts` from the working directory.
 Start the dev server with HMR.
 
 ```bash
-bunx bundoc dev
-bunx bundoc dev --port 4000 --host 0.0.0.0
+bunx @clusterize/bundoc dev
+bunx @clusterize/bundoc dev --port 4000 --host 0.0.0.0
 ```
 
 | Flag | Default | Notes |
@@ -36,8 +36,8 @@ removed. Output goes to `.bundoc/cache/`.
 Build a static site to `dist/`.
 
 ```bash
-bunx bundoc build
-bunx bundoc build --out public
+bunx @clusterize/bundoc build
+bunx @clusterize/bundoc build --out public
 ```
 
 | Flag | Default | Notes |
@@ -53,8 +53,8 @@ CSS, and per-locale search indexes under
 Serve a previously built `dist/` with SPA fallback.
 
 ```bash
-bunx bundoc preview
-bunx bundoc preview --port 4173
+bunx @clusterize/bundoc preview
+bunx @clusterize/bundoc preview --port 4173
 ```
 
 | Flag | Default | Notes |
@@ -70,8 +70,8 @@ Useful for verifying the static build before deploying.
 Scaffold a new project.
 
 ```bash
-bunx bundoc init my-docs
-bunx bundoc init .       # current directory
+bunx @clusterize/bundoc init my-docs
+bunx @clusterize/bundoc init .       # current directory
 ```
 
 | Positional | Default | Notes |
@@ -83,6 +83,6 @@ Creates `bundoc.config.ts`, `bunfig.toml`, `content/`, and `theme/`.
 ## Global flags
 
 ```bash
-bunx bundoc --help
-bunx bundoc --version
+bunx @clusterize/bundoc --help
+bunx @clusterize/bundoc --version
 ```

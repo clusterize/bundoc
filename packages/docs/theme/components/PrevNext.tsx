@@ -1,4 +1,4 @@
-import { Link } from "bundoc/theme";
+import { Link } from "@clusterize/bundoc/theme";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type Item = { route: string; title: string } | null;

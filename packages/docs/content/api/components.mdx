@@ -16,7 +16,7 @@ Renders the active route's MDX. Place it once in your theme, wherever
 the article body should appear.
 
 ```tsx
-import { PageOutlet } from "bundoc/theme";
+import { PageOutlet } from "@clusterize/bundoc/theme";
 
 <PageOutlet
   fallback={<p>Loading…</p>}
@@ -40,7 +40,7 @@ the manifest.
 Locale-aware, basePath-aware client-side navigation.
 
 ```tsx
-import { Link } from "bundoc/theme";
+import { Link } from "@clusterize/bundoc/theme";
 
 <Link to="/api/hooks" className="…">
   API hooks

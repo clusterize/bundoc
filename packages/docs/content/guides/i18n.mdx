@@ -47,7 +47,7 @@ because someone hasn't translated a page yet.
 Your theme can detect this and show a banner:
 
 ```tsx
-import { useCurrentPage } from "bundoc/theme";
+import { useCurrentPage } from "@clusterize/bundoc/theme";
 
 function Article() {
   const page = useCurrentPage();
@@ -72,7 +72,7 @@ pattern.
 different prefix.
 
 ```tsx
-import { useLocale } from "bundoc/theme";
+import { useLocale } from "@clusterize/bundoc/theme";
 
 function LocaleSwitcher() {
   const { locale, locales, setLocale } = useLocale();

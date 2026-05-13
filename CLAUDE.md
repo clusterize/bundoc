@@ -36,8 +36,8 @@ each member is a real package with its own `package.json`.
   - `src/scaffold/` — `bundoc init` templates.
 - `packages/docs/` — the public docs site AND the integration-test target.
   Doubles as the canonical example consumer of bundoc. Depends on
-  `"bundoc": "workspace:*"` so edits to `packages/bundoc/src/` are picked
-  up live (no install snapshot in between).
+  `"@clusterize/bundoc": "workspace:*"` so edits to `packages/bundoc/src/`
+  are picked up live (no install snapshot in between).
 
 ## Key non-obvious things
 
@@ -52,9 +52,10 @@ each member is a real package with its own `package.json`.
   (persisted Orama indexes), `entry.tsx`/`theme.tsx`/`mdx-components.tsx`
   (synthesized shims), `index.html` (SPA shell). Bun.serve uses these
   directly; Bun.build entrypoints from `index.html`.
-- **Workspace symlink, not snapshot**: `packages/docs/node_modules/bundoc`
-  resolves via the Bun workspace protocol (`"bundoc": "workspace:*"`) to
-  the live `packages/bundoc/` directory. Edits there are immediately
+- **Workspace symlink, not snapshot**:
+  `packages/docs/node_modules/@clusterize/bundoc` resolves via the Bun
+  workspace protocol (`"@clusterize/bundoc": "workspace:*"`) to the live
+  `packages/bundoc/` directory. Edits there are immediately
   visible in the docs build with no reinstall. Prior to the
   `packages/{bundoc,docs}` split the docs consumed bundoc via `file:..`,
   which made Bun create a content-addressed snapshot under

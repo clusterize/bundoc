@@ -10,10 +10,10 @@ pixel of the UI.
 > not run under Node.
 
 ```bash
-bunx bundoc init my-docs
+bunx @clusterize/bundoc init my-docs
 cd my-docs
 bun install
-bunx bundoc dev
+bunx @clusterize/bundoc dev
 ```
 
 Open `http://localhost:3000`.
@@ -83,7 +83,7 @@ import {
   useCurrentPage,
   useLocale,
   useTOC,
-} from "bundoc/theme";
+} from "@clusterize/bundoc/theme";
 
 export default function ThemeApp() {
   const nav = useNav();              // tree, flat, currentPath, prev, next
@@ -159,7 +159,7 @@ hooks. This keeps the contract stable across future CSR → SSR work.
 `bundoc.config.ts`:
 
 ```ts
-import { defineConfig } from "bundoc/config";
+import { defineConfig } from "@clusterize/bundoc/config";
 
 export default defineConfig({
   locales: ["en", "de"],
