@@ -1,5 +1,7 @@
 {
   "frontmatter": { "label": "Frontmatter", "order": 0 },
   "meta-json": { "label": "_meta.json", "order": 1 },
-  "roadmap": { "label": "Roadmap", "order": 2 }
+  "public-assets": { "label": "Public assets", "order": 2 },
+  "search": { "label": "Search", "order": 3 },
+  "roadmap": { "label": "Roadmap", "order": 4 }
 }

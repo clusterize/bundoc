@@ -51,6 +51,8 @@ my-docs/
 │  └─ guides/
 │     ├─ _meta.json        # ordering + labels (optional)
 │     └─ install.mdx       # → /guides/install
+├─ public/                 # static assets copied verbatim to the site
+│                          # root at build, served as-is in dev
 └─ theme/
    ├─ index.tsx            # your <App/> — mounted inside bundoc providers
    └─ mdx-components.tsx   # optional: { h1, code, pre, ... }
@@ -170,6 +172,11 @@ export default defineConfig({
   mdx: {
     highlighting: { light: "github-light", dark: "github-dark" },
   },
+  search: {
+    // Honour `search: false` in frontmatter. Replace or extend
+    // for route-prefix exclusion, draft filtering, etc.
+    filter: (page) => page.frontmatter.search !== false,
+  },
 });
 ```
 
@@ -186,6 +193,12 @@ Always on. At build time bundoc walks every MDX, extracts the
 plaintext, and writes one Orama BM25 index per locale to
 `dist/_bundoc/search/<locale>.json`. `useSearchIndex()` lazy-fetches it
 client-side. No server, no API key, no third party.
+
+Inclusion is governed by `search.filter` in `bundoc.config.ts`. The
+default predicate honours `frontmatter.search !== false` — pass your
+own to exclude by route prefix, locale, draft flag, or any combination.
+The predicate signature is exported as `SearchablePage` and the default
+as `defaultSearchFilter`, so you can extend rather than replace it.
 
 ---
 

@@ -1,0 +1,53 @@
+---
+title: Public assets
+description: Static files served verbatim from a top-level public/ directory.
+sidebar:
+  order: 3
+---
+
+# Public assets
+
+Anything you drop into `<rootDir>/public/` is served verbatim. Same
+convention as Next, Astro, SvelteKit, and VitePress.
+
+```
+my-docs/
+├─ public/
+│  ├─ favicon.ico         # → /favicon.ico
+│  ├─ og.png              # → /og.png
+│  └─ images/
+│     └─ hero.jpg         # → /images/hero.jpg
+├─ content/
+└─ theme/
+```
+
+- **`bundoc dev`** registers every file under `public/` as a route at
+  startup and watches the directory; added/removed files are picked up
+  without a restart.
+- **`bundoc build`** copies `public/**` into `dist/` after the bundle
+  finishes.
+
+## When to use `public/` vs theme imports
+
+Use `public/`:
+- Files referenced by URL from MDX (`![Logo](/logo.svg)`).
+- Files that must keep a stable, predictable path (`robots.txt`,
+  `favicon.ico`, OG images).
+
+Import from theme code instead when:
+- The asset is part of the UI (e.g. a logo bundled with the layout).
+  Theme imports go through Bun's bundler and benefit from
+  content-hashed filenames, so cache invalidation is automatic.
+
+## `basePath` interaction
+
+If `bundoc.config.ts` sets `basePath: "/docs"`, public assets are
+served under that prefix in dev (`GET /docs/favicon.ico`) — matching
+what the built output looks like once a reverse proxy strips the
+prefix.
+
+## Where this lives in the codebase
+
+The dev-server scan lives in
+`packages/bundoc/src/server/dev-server.ts`; the build-time copy is in
+`packages/bundoc/src/server/build.ts`.

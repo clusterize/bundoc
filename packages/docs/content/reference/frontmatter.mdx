@@ -29,6 +29,7 @@ sidebar:
 | `description` | `string` | — | Free-form summary; render in `<meta name="description">`. Not currently consumed by bundoc itself. |
 | `sidebar.order` | `number` | `0` | Position in the sidebar (lower first; ties break alphabetically). |
 | `sidebar.label` | `string` | derived from filename | Override the auto-derived sidebar label. |
+| `search` | `boolean` | `true` | Set to `false` to exclude the page from the build-time search index. Enforced by the default `search.filter` predicate in `bundoc.config.ts` — themes can override or extend it. See [`reference/search`](/reference/search). |
 
 Anything else is preserved verbatim and surfaces via
 [`useFrontmatter<T>()`](/api/hooks#useFrontmatter):

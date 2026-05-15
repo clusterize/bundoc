@@ -17,13 +17,21 @@ folders.
 type MetaJson = {
   [segment: string]:
     | string                                            // shorthand: { "foo": "Custom label" }
-    | { label?: string; order?: number; hidden?: boolean };
+    | ({ label?: string; order?: number; hidden?: boolean } & {
+        // Any additional keys are passed through to the theme as
+        // `NavNode.meta` — bundoc does not interpret them.
+        [extra: string]: unknown;
+      });
 };
 ```
 
 The keys are *segments*: leaf filenames without `.mdx`, or folder
 names. The values are either a plain string label or an object with
 explicit fields.
+
+Any keys beyond `label`/`order`/`hidden` are passed through to the
+theme verbatim via `NavNode.meta`. Use this for icons, badges,
+separator hints, or any other per-entry data your theme needs.
 
 ## Examples
 
@@ -45,6 +53,32 @@ When you only want to relabel:
 {
   "i18n": "Internationalisation"
 }
+```
+
+### Pass-through theme metadata
+
+```json title="content/_meta.json"
+{
+  "core": {
+    "label": "Core",
+    "order": 0,
+    "icon": "cpu",
+    "badge": "new"
+  }
+}
+```
+
+These extras land on the corresponding `NavNode.meta`:
+
+```tsx
+{nav.tree.children.map((node) => (
+  <SidebarItem
+    key={node.seg}
+    label={node.label}
+    icon={node.meta?.icon as string | undefined}
+    badge={node.meta?.badge as string | undefined}
+  />
+))}
 ```
 
 ### Hidden entries

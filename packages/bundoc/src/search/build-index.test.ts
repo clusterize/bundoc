@@ -3,17 +3,14 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { create, load, search } from "@orama/orama";
+import type { SearchablePage } from "../config/index.ts";
 import { discoverContent } from "../content/discover.ts";
-import { buildManifest } from "../content/manifest.ts";
+import { buildManifest, type Manifest } from "../content/manifest.ts";
 import { buildSearchIndexes, ORAMA_SCHEMA } from "./build-index.ts";
 
-function restoreJson(json: string) {
-  const db = create({ schema: ORAMA_SCHEMA });
-  load(db, JSON.parse(json));
-  return db;
-}
-
-test("build → persist → restore → search roundtrip", async () => {
+async function buildDocsManifest(): Promise<{
+  manifest: Manifest;
+}> {
   const contentDir = resolve(import.meta.dir, "../../../docs/content");
   const discovery = await discoverContent({
     contentDir,
@@ -27,7 +24,17 @@ test("build → persist → restore → search roundtrip", async () => {
     defaultLocale: "en",
     basePath: "/",
   });
+  return { manifest };
+}
 
+function restoreJson(json: string) {
+  const db = create({ schema: ORAMA_SCHEMA });
+  load(db, JSON.parse(json));
+  return db;
+}
+
+test("build → persist → restore → search roundtrip", async () => {
+  const { manifest } = await buildDocsManifest();
   const out = await mkdtemp(join(tmpdir(), "bundoc-search-"));
   try {
     const { files } = await buildSearchIndexes({
@@ -59,20 +66,7 @@ test("build → persist → restore → search roundtrip", async () => {
 }, 10_000);
 
 test("German index searches German content", async () => {
-  const contentDir = resolve(import.meta.dir, "../../../docs/content");
-  const discovery = await discoverContent({
-    contentDir,
-    locales: ["en", "de"],
-    defaultLocale: "en",
-  });
-  const manifest = await buildManifest({
-    discovery,
-    contentDir,
-    locales: ["en", "de"],
-    defaultLocale: "en",
-    basePath: "/",
-  });
-
+  const { manifest } = await buildDocsManifest();
   const out = await mkdtemp(join(tmpdir(), "bundoc-search-"));
   try {
     const { files } = await buildSearchIndexes({
@@ -85,6 +79,77 @@ test("German index searches German content", async () => {
     // "Schnellstart" only appears in the German content.
     const r = await search(db, { term: "Schnellstart" });
     expect(r.count).toBeGreaterThan(0);
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+}, 10_000);
+
+test("default predicate honours frontmatter.search: false", async () => {
+  const { manifest } = await buildDocsManifest();
+  const out = await mkdtemp(join(tmpdir(), "bundoc-search-"));
+  try {
+    const { files } = await buildSearchIndexes({
+      manifest,
+      sourceLoader: (p) => Bun.file(p).text(),
+      outDir: out,
+    });
+    const db = restoreJson(await Bun.file(files.en!).text());
+    // Roadmap has `search: false` in its frontmatter (see
+    // packages/docs/content/reference/roadmap.mdx) — the default
+    // predicate skips it.
+    const r = await search(db, { term: "roadmap" });
+    const routes = new Set(
+      r.hits.map((h) => (h.document as unknown as { route: string }).route),
+    );
+    expect(routes.has("/reference/roadmap")).toBe(false);
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+}, 10_000);
+
+test("custom predicate can exclude by route prefix", async () => {
+  const { manifest } = await buildDocsManifest();
+  const out = await mkdtemp(join(tmpdir(), "bundoc-search-"));
+  try {
+    const { files } = await buildSearchIndexes({
+      manifest,
+      sourceLoader: (p) => Bun.file(p).text(),
+      outDir: out,
+      filter: (p) => !p.route.startsWith("/api/"),
+    });
+    const db = restoreJson(await Bun.file(files.en!).text());
+    const r = await search(db, { term: "hook", properties: ["text", "title"] });
+    const routes = r.hits.map(
+      (h) => (h.document as unknown as { route: string }).route,
+    );
+    for (const route of routes) {
+      expect(route.startsWith("/api/")).toBe(false);
+    }
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+}, 10_000);
+
+test("predicate never receives fallback rows", async () => {
+  const { manifest } = await buildDocsManifest();
+  const out = await mkdtemp(join(tmpdir(), "bundoc-search-"));
+  const seen: SearchablePage[] = [];
+  try {
+    await buildSearchIndexes({
+      manifest,
+      sourceLoader: (p) => Bun.file(p).text(),
+      outDir: out,
+      filter: (page) => {
+        seen.push(page);
+        return true;
+      },
+    });
+    expect(seen.length).toBeGreaterThan(0);
+    // German locale has fallback rows; if any leaked past the
+    // fallback-skip step we'd see fallback: true here.
+    for (const page of seen) {
+      expect(page.fallback).toBe(false);
+    }
   } finally {
     await rm(out, { recursive: true, force: true });
   }

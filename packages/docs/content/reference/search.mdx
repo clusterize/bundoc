@@ -1,0 +1,104 @@
+---
+title: Search
+description: Configure which pages bundoc indexes for client-side search.
+sidebar:
+  order: 4
+---
+
+# Search
+
+bundoc builds one Orama index per locale at build time and serves it
+from `dist/_bundoc/search/<locale>.json`. The `useSearchIndex()` hook
+lazy-fetches and queries it client-side — no server, no API key.
+
+## What gets indexed
+
+Every (route, locale) pair in the manifest, with one exception:
+**synthesised locale fallbacks are skipped**. If a page only exists in
+the default locale, only the default-locale index includes it — the
+runtime falls through to the default index on miss.
+
+Beyond that, the inclusion policy is yours via `search.filter` in
+`bundoc.config.ts`.
+
+## The `search.filter` predicate
+
+```ts
+import { defineConfig, type SearchablePage } from "@clusterize/bundoc/config";
+
+export default defineConfig({
+  // …
+  search: {
+    filter: (page: SearchablePage) => page.frontmatter.search !== false,
+  },
+});
+```
+
+`SearchablePage` has:
+
+| Field | Type | Notes |
+|---|---|---|
+| `route` | `string` | Route path with leading slash (`"/getting-started/installation"`). |
+| `locale` | `string` | BCP-47-style code (`"en"`, `"de"`). |
+| `title` | `string` | The page's display title (frontmatter `title` or derived). |
+| `frontmatter` | `Record<string, unknown>` | The page's raw frontmatter. |
+| `fallback` | `boolean` | Always `false` for predicate calls — fallback rows are filtered out before the predicate runs. The field is present for API symmetry. |
+
+Return `true` to include the page in the index, `false` to skip it.
+
+### Default predicate
+
+If you omit `search.filter`, bundoc applies:
+
+```ts
+(page) => page.frontmatter.search !== false
+```
+
+This is the conventional opt-out — any page with `search: false` in
+its frontmatter is excluded.
+
+You can import and compose with it:
+
+```ts
+import { defaultSearchFilter } from "@clusterize/bundoc/config";
+
+export default defineConfig({
+  // …
+  search: {
+    filter: (p) =>
+      defaultSearchFilter(p) &&
+      !p.route.startsWith("/internal/") &&
+      p.frontmatter.draft !== true,
+  },
+});
+```
+
+## Examples
+
+### Exclude a route prefix
+
+```ts
+search: {
+  filter: (p) => !p.route.startsWith("/api/"),
+}
+```
+
+### Exclude drafts
+
+```ts
+search: {
+  filter: (p) => p.frontmatter.draft !== true,
+}
+```
+
+### Locale-aware
+
+```ts
+search: {
+  filter: (p) => p.locale === "en" || p.frontmatter.translated === true,
+}
+```
+
+## Querying the index
+
+See [`useSearchIndex`](/api/hooks#usesearchindex) for the client side.

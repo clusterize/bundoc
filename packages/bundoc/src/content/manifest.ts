@@ -33,6 +33,13 @@ export type NavNode = {
    * `"installation"`). Internal lookup key — themes can ignore it.
    */
   seg?: string;
+  /**
+   * Pass-through bag of any extra keys present on the segment's
+   * `_meta.json` entry (everything other than `label`/`order`/`hidden`).
+   * Bundoc does not interpret these — themes own them (e.g. `icon`,
+   * `kind: "separator"`, `badge`).
+   */
+  meta?: Record<string, unknown>;
 };
 
 export type Manifest = {
@@ -51,8 +58,16 @@ export type Manifest = {
 };
 
 type MetaJson = {
-  /** Map of segment → label override or {label, order, hidden}. */
-  [key: string]: string | { label?: string; order?: number; hidden?: boolean };
+  /**
+   * Map of segment → label override or `{ label, order, hidden, …extras }`.
+   * Extra keys beyond `label`/`order`/`hidden` are passed through to
+   * `NavNode.meta` verbatim — bundoc does not interpret them.
+   */
+  [key: string]:
+    | string
+    | ({ label?: string; order?: number; hidden?: boolean } & {
+        [extra: string]: unknown;
+      });
 };
 
 /**
@@ -217,6 +232,10 @@ function insertRoute(
         existing.order = segMeta.order ?? existing.order;
         existing.fallback = entry.fallback;
         existing.seg = seg;
+        // Don't touch `meta` on update — first write wins, matching
+        // how `label`/`order` already behave for shared nodes. The
+        // metadata source for a given (parent-dir, segment) pair is a
+        // single `_meta.json` entry, so the value is identical anyway.
       } else {
         cursor.children.push({
           route: entry.route,
@@ -226,6 +245,7 @@ function insertRoute(
           children: [],
           fallback: entry.fallback,
           seg,
+          meta: segMeta.meta,
         });
       }
     } else {
@@ -238,6 +258,7 @@ function insertRoute(
           order: segMeta.order ?? Infinity,
           children: [],
           seg,
+          meta: segMeta.meta,
         };
         cursor.children.push(child);
       }
@@ -270,12 +291,23 @@ function findChildBySegment(node: NavNode, seg: string): NavNode | undefined {
 function readSegMeta(
   meta: MetaJson | undefined,
   seg: string,
-): { label?: string; order?: number; hidden?: boolean } {
+): {
+  label?: string;
+  order?: number;
+  hidden?: boolean;
+  meta?: Record<string, unknown>;
+} {
   if (!meta) return {};
   const raw = meta[seg];
   if (raw === undefined) return {};
   if (typeof raw === "string") return { label: raw };
-  return raw;
+  const { label, order, hidden, ...rest } = raw;
+  return {
+    label,
+    order,
+    hidden,
+    meta: Object.keys(rest).length > 0 ? rest : undefined,
+  };
 }
 
 function numberOr(
