@@ -1,6 +1,6 @@
 {
   "name": "@clusterize/bundoc",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A modern bring-your-own-components documentation framework built with Bun and MDX.",
   "keywords": [
     "documentation",
