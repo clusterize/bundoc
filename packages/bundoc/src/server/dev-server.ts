@@ -10,8 +10,17 @@ import {
   regenerateAll,
 } from "./cache.ts";
 
-export async function startDevServer(opts: { port: number; host: string }) {
-  const config = await loadConfig();
+export async function startDevServer(opts: {
+  port: number;
+  host: string;
+  /**
+   * Optional pre-resolved config. When omitted, `loadConfig()` reads
+   * `bundoc.config.ts` from `process.cwd()`. Tests use this to drive a
+   * server from a fixture directory without chdir-ing.
+   */
+  config?: ResolvedConfig;
+}) {
+  const config = opts.config ?? (await loadConfig());
   const paths = await regenerateAll({ config, development: true });
 
   // Bun.serve's HTML import requires a static path; we already wrote the
@@ -23,10 +32,20 @@ export async function startDevServer(opts: { port: number; host: string }) {
   const publicDir = join(config.rootDir, "public");
   await ensureDir(publicDir);
 
-  const baseRoutes = {
-    "/_bundoc/search/:filename": (
-      req: Bun.BunRequest<"/_bundoc/search/:filename">,
-    ) => {
+  // Search route mirrors the client URL builder (`theme/search.ts`),
+  // which prefixes `basePath` when not `/`. Without this prefix the
+  // client would request `<basePath>/_bundoc/search/<locale>.json` and
+  // fall through to the SPA shell.
+  const searchRoute =
+    config.basePath === "/"
+      ? "/_bundoc/search/:filename"
+      : `${config.basePath}/_bundoc/search/:filename`;
+
+  const baseRoutes: Record<
+    string,
+    (req: Bun.BunRequest<"/_bundoc/search/:filename">) => Response
+  > = {
+    [searchRoute]: (req) => {
       const safe = req.params.filename.replace(/[^a-zA-Z0-9._-]/g, "");
       const file = Bun.file(join(searchDir, safe));
       const contentType = safe.endsWith(".json")
