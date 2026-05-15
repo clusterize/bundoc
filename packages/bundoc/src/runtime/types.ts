@@ -31,9 +31,6 @@ export type NavNode = {
    * `_meta.json` entry (beyond `label`/`order`/`hidden`). Bundoc does
    * not interpret these — themes own them (e.g. `icon`, `badge`,
    * `kind: "separator"`).
-   *
-   * Mirror of `NavNode.meta` in `content/manifest.ts` — keep both in
-   * sync. See `runtime/types.test.ts` for the type-level guard.
    */
   meta?: Record<string, unknown>;
 };

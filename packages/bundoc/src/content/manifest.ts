@@ -1,8 +1,13 @@
 import { dirname, join, relative, sep } from "node:path";
 import { Glob } from "bun";
+// `Heading` and `NavNode` are shared with the browser-side runtime
+// (themes consume them via `bundoc/theme`). Single source of truth
+// lives in `runtime/types.ts`; re-exported here for legacy imports
+// from `content/manifest.ts`.
+import type { Heading, NavNode } from "../runtime/types.ts";
 import type { DiscoveredEntry, DiscoveryResult } from "./discover.ts";
 
-export type Heading = { id: string; text: string; level: number };
+export type { Heading, NavNode };
 
 export type ManifestRouteEntry = {
   route: string;
@@ -15,38 +20,6 @@ export type ManifestRouteEntry = {
   title: string;
   /** True when this is the synthesized fallback (default-locale content surfaced under another locale). */
   fallback?: boolean;
-};
-
-/**
- * Per-locale nav tree node.
- *
- * Mirror of `NavNode` in `runtime/types.ts` — that's the *public* copy
- * re-exported via `bundoc/theme`. Any field added here must also land
- * there; `runtime/types.test.ts` guards the shape at type-check time.
- */
-export type NavNode = {
-  /** Link route. May be undefined for category-only nodes. */
-  route?: string;
-  /** Display label. */
-  label: string;
-  /** Sort order. Lower comes first. Defaults to Infinity. */
-  order: number;
-  /** Children (for directory nodes). */
-  children: NavNode[];
-  /** True if this node is the current locale (filled at lookup time). */
-  fallback?: boolean;
-  /**
-   * Raw filesystem segment this node was created from (e.g. `"api"`,
-   * `"installation"`). Internal lookup key — themes can ignore it.
-   */
-  seg?: string;
-  /**
-   * Pass-through bag of any extra keys present on the segment's
-   * `_meta.json` entry (everything other than `label`/`order`/`hidden`).
-   * Bundoc does not interpret these — themes own them (e.g. `icon`,
-   * `kind: "separator"`, `badge`).
-   */
-  meta?: Record<string, unknown>;
 };
 
 export type Manifest = {
