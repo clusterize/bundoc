@@ -17,6 +17,13 @@ export type ManifestRouteEntry = {
   fallback?: boolean;
 };
 
+/**
+ * Per-locale nav tree node.
+ *
+ * Mirror of `NavNode` in `runtime/types.ts` — that's the *public* copy
+ * re-exported via `bundoc/theme`. Any field added here must also land
+ * there; `runtime/types.test.ts` guards the shape at type-check time.
+ */
 export type NavNode = {
   /** Link route. May be undefined for category-only nodes. */
   route?: string;

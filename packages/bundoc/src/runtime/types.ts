@@ -26,6 +26,16 @@ export type NavNode = {
   fallback?: boolean;
   /** Raw filesystem segment (internal lookup key). */
   seg?: string;
+  /**
+   * Pass-through bag of any extra keys present on the segment's
+   * `_meta.json` entry (beyond `label`/`order`/`hidden`). Bundoc does
+   * not interpret these — themes own them (e.g. `icon`, `badge`,
+   * `kind: "separator"`).
+   *
+   * Mirror of `NavNode.meta` in `content/manifest.ts` — keep both in
+   * sync. See `runtime/types.test.ts` for the type-level guard.
+   */
+  meta?: Record<string, unknown>;
 };
 
 export type Manifest = {
