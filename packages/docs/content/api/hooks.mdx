@@ -51,12 +51,21 @@ type NavNode = {
   order: number;
   children: NavNode[];
   fallback?: boolean;
+  /**
+   * Pass-through bag of any extra keys present on the segment's
+   * `_meta.json` entry (beyond `label`/`order`/`hidden`). Bundoc does
+   * not interpret these — themes own them (e.g. `icon`, `badge`,
+   * `kind: "separator"`).
+   */
+  meta?: Record<string, unknown>;
 };
 ```
 
 A node with no `route` is a *group* (a folder without an index). A
 node with `fallback: true` exists in the locale only because bundoc
-synthesised it from the default-locale source.
+synthesised it from the default-locale source. `meta` carries
+arbitrary theme-defined extras from `_meta.json` — see
+[`reference/_meta.json`](/reference/meta-json#pass-through-theme-metadata).
 
 ## useLocale
 
