@@ -42,8 +42,9 @@ export async function runBuild(opts: { out: string }) {
     process.exit(1);
   }
 
-  // Copy theme/public/* if it exists.
-  const publicDir = resolve(config.rootDir, "theme", "public");
+  // Copy <rootDir>/public/** verbatim to outDir (Next/Astro/SvelteKit
+  // convention — see `bundoc dev` which serves the same directory).
+  const publicDir = resolve(config.rootDir, "public");
   if (await dirExists(publicDir)) {
     await cp(publicDir, outDir, { recursive: true });
   }

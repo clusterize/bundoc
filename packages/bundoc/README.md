@@ -51,6 +51,8 @@ my-docs/
 │  └─ guides/
 │     ├─ _meta.json        # ordering + labels (optional)
 │     └─ install.mdx       # → /guides/install
+├─ public/                 # static assets copied verbatim to the site
+│                          # root at build, served as-is in dev
 └─ theme/
    ├─ index.tsx            # your <App/> — mounted inside bundoc providers
    └─ mdx-components.tsx   # optional: { h1, code, pre, ... }
