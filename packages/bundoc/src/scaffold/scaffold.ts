@@ -19,6 +19,11 @@ export async function scaffold(dir: string) {
 export default defineConfig({
   locales: ["en"],
   defaultLocale: "en",
+  search: {
+    // Honour \`search: false\` in MDX frontmatter. Replace or extend
+    // for route-prefix exclusion, draft filtering, etc.
+    filter: (page) => page.frontmatter.search !== false,
+  },
 });
 `,
   );

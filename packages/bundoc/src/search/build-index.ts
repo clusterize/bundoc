@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { create, insertMultiple, save } from "@orama/orama";
+import { defaultSearchFilter, type SearchablePage } from "../config/index.ts";
 import type { Manifest } from "../content/manifest.ts";
 import { extractSearchable } from "./extract.ts";
 
@@ -47,13 +48,24 @@ export async function buildSearchIndexes(opts: {
   /** Map of `sourcePath` → original MDX source text. We keep the read here so the caller can cache. */
   sourceLoader: (sourcePath: string) => Promise<string>;
   outDir: string;
+  /**
+   * Inclusion predicate. Called once per (route, locale) pair (fallback
+   * rows are skipped before the predicate runs). Defaults to
+   * `defaultSearchFilter`.
+   */
+  filter?: (page: SearchablePage) => boolean;
 }): Promise<SearchIndexFiles> {
-  const { manifest, sourceLoader, outDir } = opts;
+  const { manifest, sourceLoader, outDir, filter = defaultSearchFilter } = opts;
   await mkdir(outDir, { recursive: true });
 
   const files: Record<string, string> = {};
   for (const locale of manifest.locales) {
-    const docs = await collectDocsForLocale({ manifest, locale, sourceLoader });
+    const docs = await collectDocsForLocale({
+      manifest,
+      locale,
+      sourceLoader,
+      filter,
+    });
     const db = create({ schema: ORAMA_SCHEMA });
     if (docs.length > 0) {
       await insertMultiple(db, docs as unknown as Record<string, unknown>[]);
@@ -70,8 +82,9 @@ async function collectDocsForLocale(opts: {
   manifest: Manifest;
   locale: string;
   sourceLoader: (sourcePath: string) => Promise<string>;
+  filter: (page: SearchablePage) => boolean;
 }): Promise<IndexedDoc[]> {
-  const { manifest, locale, sourceLoader } = opts;
+  const { manifest, locale, sourceLoader, filter } = opts;
   const seen = new Set<string>();
   const docs: IndexedDoc[] = [];
 
@@ -81,6 +94,18 @@ async function collectDocsForLocale(opts: {
     // every other locale and bloat the index. (The runtime can fall through
     // to the default-locale index on miss.)
     if (!entry || entry.fallback) continue;
+
+    if (
+      !filter({
+        route,
+        locale,
+        title: entry.title,
+        frontmatter: entry.frontmatter,
+        fallback: false,
+      })
+    ) {
+      continue;
+    }
 
     const sourcePath = entry.sourcePath;
     if (seen.has(`${locale}::${sourcePath}`)) continue;

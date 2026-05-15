@@ -19,6 +19,50 @@ export type BundocMdxConfig = {
   highlighting?: MdxHighlightingConfig;
 };
 
+/**
+ * One row passed to the `search.filter` predicate. The predicate returns
+ * `true` to include the page in the per-locale Orama index, `false` to
+ * skip it.
+ */
+export type SearchablePage = {
+  route: string;
+  locale: string;
+  title: string;
+  frontmatter: Record<string, unknown>;
+  /**
+   * True when this row is a synthesised locale fallback (default-locale
+   * content surfaced under another locale). Included for transparency,
+   * but the predicate never actually receives fallback rows — bundoc
+   * skips them before the predicate runs to prevent default-locale
+   * content from duplicating into every other locale's index.
+   */
+  fallback: boolean;
+};
+
+/**
+ * Default search predicate. Honours `frontmatter.search !== false` —
+ * the conventional opt-out documented in `reference/frontmatter.mdx`.
+ *
+ * Exported so themes can extend rather than replace the convention:
+ *
+ *     filter: (p) => defaultSearchFilter(p) && !p.route.startsWith("/internal/")
+ */
+export const defaultSearchFilter = (page: SearchablePage): boolean =>
+  page.frontmatter.search !== false;
+
+export type BundocSearchConfig = {
+  /**
+   * Predicate applied to every (route, locale) pair before indexing.
+   * Return `false` to exclude. Defaults to `defaultSearchFilter`.
+   */
+  filter?: (page: SearchablePage) => boolean;
+};
+
+export type ResolvedSearchConfig = {
+  /** Always defined — callers don't need to nullish-check. */
+  filter: (page: SearchablePage) => boolean;
+};
+
 export type BundocConfig = {
   /** Available locales (BCP-47 codes; bundoc treats them as opaque strings). */
   locales: string[];
@@ -34,6 +78,8 @@ export type BundocConfig = {
   basePath?: string;
   /** MDX pipeline tweaks (Shiki, etc.). */
   mdx?: BundocMdxConfig;
+  /** Search indexing knobs. */
+  search?: BundocSearchConfig;
 };
 
 export type ResolvedMdxConfig = {
@@ -42,7 +88,7 @@ export type ResolvedMdxConfig = {
 };
 
 export type ResolvedConfig = Required<
-  Omit<BundocConfig, "mdxComponentsEntry" | "mdx">
+  Omit<BundocConfig, "mdxComponentsEntry" | "mdx" | "search">
 > & {
   /** Absolute path to the project root (cwd at load time). */
   rootDir: string;
@@ -54,6 +100,8 @@ export type ResolvedConfig = Required<
   mdxComponentsEntry: string | undefined;
   /** Resolved MDX pipeline config. */
   mdx: ResolvedMdxConfig;
+  /** Resolved search config. `filter` is always callable. */
+  search: ResolvedSearchConfig;
 };
 
 /** Identity helper for type-safe config authoring. */
@@ -133,7 +181,14 @@ export function resolveConfig(
     basePath,
     rootDir,
     mdx: resolveMdxConfig(raw.mdx),
+    search: resolveSearchConfig(raw.search),
   };
+}
+
+function resolveSearchConfig(
+  raw: BundocSearchConfig | undefined,
+): ResolvedSearchConfig {
+  return { filter: raw?.filter ?? defaultSearchFilter };
 }
 
 function resolveMdxConfig(raw: BundocMdxConfig | undefined): ResolvedMdxConfig {
