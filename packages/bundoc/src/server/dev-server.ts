@@ -1,5 +1,7 @@
 import { watch } from "node:fs";
-import { join } from "node:path";
+import { mkdir, stat } from "node:fs/promises";
+import { join, sep } from "node:path";
+import { Glob } from "bun";
 import { loadConfig, type ResolvedConfig } from "../config/index.ts";
 import {
   cachePaths,
@@ -18,6 +20,29 @@ export async function startDevServer(opts: { port: number; host: string }) {
   const indexHtml = await import(paths.htmlPath);
 
   const searchDir = cachePaths(config).searchDir;
+  const publicDir = join(config.rootDir, "public");
+  await ensureDir(publicDir);
+
+  const baseRoutes = {
+    "/_bundoc/search/:filename": (
+      req: Bun.BunRequest<"/_bundoc/search/:filename">,
+    ) => {
+      const safe = req.params.filename.replace(/[^a-zA-Z0-9._-]/g, "");
+      const file = Bun.file(join(searchDir, safe));
+      const contentType = safe.endsWith(".json")
+        ? "application/json"
+        : "application/octet-stream";
+      return new Response(file, {
+        headers: { "content-type": contentType },
+      });
+    },
+  };
+
+  const buildRoutes = async () => ({
+    ...(await buildPublicRoutes(publicDir, config.basePath)),
+    ...baseRoutes,
+    "/*": indexHtml.default,
+  });
 
   const server = Bun.serve({
     port: opts.port,
@@ -26,22 +51,10 @@ export async function startDevServer(opts: { port: number; host: string }) {
       hmr: true,
       console: true,
     },
-    routes: {
-      "/_bundoc/search/:filename": (req) => {
-        const safe = req.params.filename.replace(/[^a-zA-Z0-9._-]/g, "");
-        const file = Bun.file(join(searchDir, safe));
-        const contentType = safe.endsWith(".json")
-          ? "application/json"
-          : "application/octet-stream";
-        return new Response(file, {
-          headers: { "content-type": contentType },
-        });
-      },
-      "/*": indexHtml.default,
-    },
+    routes: await buildRoutes(),
   });
 
-  setupWatchers(config);
+  setupWatchers({ config, publicDir, server, buildRoutes });
 
   process.on("SIGINT", () => {
     server.stop();
@@ -52,7 +65,48 @@ export async function startDevServer(opts: { port: number; host: string }) {
   return { server, paths, config };
 }
 
-function setupWatchers(config: ResolvedConfig) {
+async function ensureDir(p: string): Promise<void> {
+  try {
+    const s = await stat(p);
+    if (s.isDirectory()) return;
+  } catch {
+    // not present → create below
+  }
+  await mkdir(p, { recursive: true });
+}
+
+/**
+ * Scan `publicDir` and return a route map (`<basePath>/<file>` → BunFile).
+ * Each value is a `BunFile`, so Bun reads contents from disk per request —
+ * existing-file content updates are picked up without a reload. New or
+ * removed files require a reload (see `setupWatchers`).
+ */
+async function buildPublicRoutes(
+  publicDir: string,
+  basePath: string,
+): Promise<Record<string, Bun.BunFile>> {
+  const routes: Record<string, Bun.BunFile> = {};
+  const glob = new Glob("**/*");
+  for await (const file of glob.scan({
+    cwd: publicDir,
+    onlyFiles: true,
+    dot: false,
+  })) {
+    const slashed = "/" + file.split(sep).join("/");
+    const url = basePath === "/" ? slashed : `${basePath}${slashed}`;
+    routes[url] = Bun.file(join(publicDir, file));
+  }
+  return routes;
+}
+
+function setupWatchers(opts: {
+  config: ResolvedConfig;
+  publicDir: string;
+  server: Bun.Server<unknown>;
+  buildRoutes: () => Promise<Record<string, unknown>>;
+}) {
+  const { config, publicDir, server, buildRoutes } = opts;
+
   let pending: NodeJS.Timeout | undefined;
   const debouncedRebuild = (reason: string) => {
     if (pending) clearTimeout(pending);
@@ -95,5 +149,30 @@ function setupWatchers(config: ResolvedConfig) {
     },
   );
 
-  process.on("SIGINT", () => watcher.close());
+  // Watch public/ for add/remove. Existing-file content updates are picked
+  // up per request via BunFile; only the route table needs reloading when
+  // the *set* of files changes.
+  let publicPending: NodeJS.Timeout | undefined;
+  const publicWatcher = watch(
+    publicDir,
+    { recursive: true },
+    (event, filename) => {
+      if (!filename) return;
+      if (event !== "rename") return; // 'change' is content-only
+      if (publicPending) clearTimeout(publicPending);
+      publicPending = setTimeout(async () => {
+        try {
+          server.reload({ routes: await buildRoutes() } as never);
+          console.log(`[bundoc] public/ routes reloaded (${filename})`);
+        } catch (err) {
+          console.error(`[bundoc] failed to reload public routes:`, err);
+        }
+      }, 50);
+    },
+  );
+
+  process.on("SIGINT", () => {
+    watcher.close();
+    publicWatcher.close();
+  });
 }

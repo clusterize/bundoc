@@ -1,10 +1,11 @@
 import { afterAll, beforeAll, expect, test } from "bun:test";
 import { rm } from "node:fs/promises";
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { startDevServer } from "../server/dev-server.ts";
 
 const docsDir = resolve(import.meta.dir, "../../../docs");
 const port = 6451;
+const publicAsset = join(docsDir, "public/__test_asset.txt");
 
 let server: Awaited<ReturnType<typeof startDevServer>> | undefined;
 
@@ -12,11 +13,16 @@ beforeAll(async () => {
   // Run inside docs/.
   process.chdir(docsDir);
   await rm(resolve(docsDir, ".bundoc"), { recursive: true, force: true });
+  // Write the public asset before starting so the pre-scan picks it up
+  // deterministically (the watcher would also catch it, but debounce
+  // makes the timing race-y in tests).
+  await Bun.write(publicAsset, "hello");
   server = await startDevServer({ port, host: "localhost" });
 });
 
 afterAll(async () => {
   server?.server.stop();
+  await rm(publicAsset, { force: true });
 });
 
 async function fetchText(
@@ -86,6 +92,26 @@ test("search index files are served per locale", async () => {
     const buf = new Uint8Array(await r.arrayBuffer());
     expect(buf.byteLength).toBeGreaterThan(1024); // non-trivial index
   }
+});
+
+test("serves public/* assets", async () => {
+  const r = await fetch(`http://localhost:${port}/__test_asset.txt`);
+  expect(r.status).toBe(200);
+  expect(await r.text()).toBe("hello");
+});
+
+test("unknown extension-less path returns SPA shell", async () => {
+  const r = await fetchText("/some-unknown-route");
+  expect(r.status).toBe(200);
+  expect(r.body).toContain('<div id="root">');
+});
+
+test("path traversal does not escape publicDir", async () => {
+  const r = await fetch(
+    `http://localhost:${port}/__test_asset.txt/../../etc/passwd`,
+  );
+  const body = await r.text();
+  expect(body).not.toMatch(/root:/);
 });
 
 test("search index round-trip: fetch → restore → query", async () => {
