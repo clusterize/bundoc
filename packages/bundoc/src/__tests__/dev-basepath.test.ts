@@ -21,7 +21,11 @@ beforeAll(async () => {
   // test (we only fetch JSON routes, never the SPA shell).
   await Bun.write(
     join(fixtureDir, "content/index.mdx"),
-    `---\ntitle: Home\n---\n\n# Home\n`,
+    `---\ntitle: Home\n---\n\n# Home\n\nWelcome to the documentation site.\n\n## Getting started\n\nInstall the package and run it.\n`,
+  );
+  await Bun.write(
+    join(fixtureDir, "content/with-image.mdx"),
+    `# Image page\n\n![alt](/x.png)\n\n[guide](/guides/install)\n`,
   );
   await Bun.write(
     join(fixtureDir, "theme/index.tsx"),
@@ -59,4 +63,38 @@ test("search index is NOT served at the unprefixed path", async () => {
   // not the JSON index.
   const contentType = r.headers.get("content-type") ?? "";
   expect(contentType).not.toContain("application/json");
+});
+
+test("MDX absolute URLs are basePath-prefixed in compiled shims", async () => {
+  const { Glob } = Bun;
+  const glob = new Glob("with-image.*.tsx");
+  let shimPath: string | undefined;
+  for await (const f of glob.scan({
+    cwd: join(fixtureDir!, ".bundoc/cache/pages"),
+    absolute: true,
+  })) {
+    shimPath = f;
+    break;
+  }
+  expect(shimPath).toBeDefined();
+  const shim = await Bun.file(shimPath!).text();
+  expect(shim).toContain('"/docs/x.png"');
+  expect(shim).toContain('"/docs/guides/install"');
+  expect(shim).not.toContain('"/x.png"');
+});
+
+test("search index round-trip with basePath: fetch → restore → query", async () => {
+  const { create, load, search } = await import("@orama/orama");
+  const r = await fetch(`http://localhost:${port}/docs/_bundoc/search/en.json`);
+  expect(r.status).toBe(200);
+  const data = await r.json();
+  const db = create({ schema: { __placeholder: "string" } });
+  load(db, data);
+  const hits = await search(db, { term: "install", tolerance: 1 });
+  expect(hits.count).toBeGreaterThan(0);
+  // The hit should reference the "/" route (our index.mdx)
+  const routes = new Set(
+    hits.hits.map((h) => (h.document as unknown as { route: string }).route),
+  );
+  expect(routes.has("/")).toBe(true);
 });

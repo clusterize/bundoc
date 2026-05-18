@@ -32,3 +32,22 @@ test("compileMdx: GFM tables compile", async () => {
   const out = await compileMdx(src);
   expect(out).toContain("table");
 });
+
+test("compileMdx: rewrites root-relative URLs under basePath", async () => {
+  const src = `# Page
+
+![hero](/images/hero.png)
+
+See the [install guide](/guides/install).
+`;
+  const out = await compileMdx(src, { basePath: "/docs" });
+  expect(out).toContain('"/docs/images/hero.png"');
+  expect(out).toContain('"/docs/guides/install"');
+});
+
+test("compileMdx: default basePath leaves URLs unrewritten", async () => {
+  const src = `![hero](/images/hero.png)\n`;
+  const out = await compileMdx(src);
+  expect(out).toContain('"/images/hero.png"');
+  expect(out).not.toContain("/docs/");
+});

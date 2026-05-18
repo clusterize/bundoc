@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import type { PluggableList } from "unified";
 import { rehypeCollectHeadings } from "./headings.ts";
+import { rehypeBasePath } from "./rehype-base-path.ts";
 
 export type HighlightingConfig = false | { light: string; dark: string };
 
@@ -15,6 +16,11 @@ export type CompileOptions = {
   development?: boolean;
   /** Build-time Shiki highlighting; `false` disables. */
   highlighting?: HighlightingConfig;
+  /**
+   * Site basePath. Root-relative URLs in MDX (e.g. `/foo.png`) are
+   * rewritten to `<basePath>/foo.png`. Defaults to `/` (no rewrite).
+   */
+  basePath?: string;
 };
 
 /**
@@ -28,10 +34,13 @@ export async function compileMdx(
   opts: CompileOptions = {},
 ): Promise<string> {
   const highlighting = opts.highlighting ?? false;
-  const rehypePlugins: PluggableList = [
-    rehypeSlug,
-    [rehypeAutolinkHeadings, { behavior: "wrap" }],
-  ];
+  const basePath = opts.basePath ?? "/";
+  const rehypePlugins: PluggableList = [];
+  if (basePath !== "/" && basePath !== "") {
+    rehypePlugins.push([rehypeBasePath, { basePath }]);
+  }
+  rehypePlugins.push(rehypeSlug);
+  rehypePlugins.push([rehypeAutolinkHeadings, { behavior: "wrap" }]);
   if (highlighting) {
     rehypePlugins.push([
       rehypeShiki,

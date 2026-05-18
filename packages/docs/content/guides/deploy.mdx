@@ -103,6 +103,8 @@ export default defineConfig({
 });
 ```
 
-`<Link>` and `useLink().href()` prepend the prefix automatically. The
-search runtime fetches indexes from `${basePath}/_bundoc/search/...`,
-so the same prefix has to be live on the deploy.
+`<Link>` and `useLink().href()` prepend the prefix automatically.
+Root-relative URLs in MDX (`![](/foo.png)`, `[](/guides/install)`) are
+rewritten at compile time. The search runtime fetches indexes from
+`${basePath}/_bundoc/search/...`, so the same prefix has to be live on
+the deploy.

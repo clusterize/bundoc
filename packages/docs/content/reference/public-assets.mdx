@@ -39,6 +39,22 @@ Import from theme code instead when:
   Theme imports go through Bun's bundler and benefit from
   content-hashed filenames, so cache invalidation is automatic.
 
+## Linking from MDX
+
+Inside MDX you can use ordinary Markdown image and link syntax with
+root-relative paths:
+
+```mdx
+![Logo](/logo.png)
+[Install guide](/guides/install)
+```
+
+At compile time bundoc prefixes any root-relative URL with the
+configured `basePath`, so under `basePath: "/docs"` the example above
+emits `/docs/logo.png` and `/docs/guides/install`. Protocol-relative
+(`//cdn/...`), absolute-scheme (`https://...`), fragment (`#...`),
+and relative (`./foo`) URLs are left untouched.
+
 ## `basePath` interaction
 
 If `bundoc.config.ts` sets `basePath: "/docs"`, public assets are

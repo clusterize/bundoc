@@ -66,13 +66,20 @@ export async function rebuildContentCache(opts: {
   const sourceToShim = new Map<string, string>();
   const compileTasks: Promise<void>[] = [];
   const highlighting = config.mdx.highlighting;
+  const basePath = config.basePath;
   for (const entry of discovery.entries) {
     if (sourceToShim.has(entry.sourcePath)) continue;
     const shimName = shimFilename(entry.sourcePath);
     const shimPath = join(paths.pagesDir, shimName);
     sourceToShim.set(entry.sourcePath, shimPath);
     compileTasks.push(
-      compileSingle(entry.sourcePath, shimPath, development, highlighting),
+      compileSingle(
+        entry.sourcePath,
+        shimPath,
+        development,
+        highlighting,
+        basePath,
+      ),
     );
   }
   await Promise.all(compileTasks);
@@ -154,6 +161,7 @@ export async function recompileSingle(opts: {
     shimPath,
     development,
     config.mdx.highlighting,
+    config.basePath,
   );
 }
 
@@ -162,9 +170,14 @@ async function compileSingle(
   shimPath: string,
   development: boolean,
   highlighting: ResolvedConfig["mdx"]["highlighting"],
+  basePath: string,
 ) {
   const source = await Bun.file(sourcePath).text();
-  const compiled = await compileMdx(source, { development, highlighting });
+  const compiled = await compileMdx(source, {
+    development,
+    highlighting,
+    basePath,
+  });
   await Bun.write(shimPath, compiled);
 }
 

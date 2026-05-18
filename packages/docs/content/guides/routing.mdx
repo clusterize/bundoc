@@ -58,7 +58,9 @@ export default defineConfig({
 
 bundoc strips the prefix on incoming requests and re-adds it when
 emitting hrefs. Internal links via `<Link>` and `useLink().href()` are
-basePath-aware automatically.
+basePath-aware automatically. Root-relative URLs authored directly in
+MDX (`![](/foo.png)`, `[](/guides/install)`) are also rewritten at
+compile time — see [Public assets → Linking from MDX](/reference/public-assets#linking-from-mdx).
 
 ## The Link helper
 
