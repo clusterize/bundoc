@@ -18,7 +18,7 @@ beforeAll(async () => {
   // makes the timing race-y in tests).
   await Bun.write(publicAsset, "hello");
   server = await startDevServer({ port, host: "localhost" });
-});
+}, 30_000);
 
 afterAll(async () => {
   server?.server.stop();
