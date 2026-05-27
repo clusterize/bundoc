@@ -73,6 +73,36 @@ export default defineConfig({
 });
 ```
 
+## Indexed frontmatter fields
+
+By default, each page's `description` frontmatter is folded into the
+indexed body text — so a page is findable by phrases that only appear
+in its description, not in its prose. The folded text is concatenated
+into the existing `text` field, so query-time boosts on `title` and
+`heading` are unchanged.
+
+Extend the list to fold extra keys, or pass `[]` to disable:
+
+```ts
+import { defineConfig } from "@clusterize/bundoc/config";
+
+export default defineConfig({
+  // …
+  search: {
+    frontmatterFields: ["description", "keywords"],
+  },
+});
+```
+
+Supported value shapes:
+
+- `string` — included verbatim.
+- `string[]` — each element is included.
+- Anything else (numbers, objects, booleans) is ignored.
+
+Pass `frontmatterFields: []` to opt out entirely and restore the
+pre-0.3 behaviour where only the body text is indexed.
+
 ## Examples
 
 ### Exclude a route prefix
