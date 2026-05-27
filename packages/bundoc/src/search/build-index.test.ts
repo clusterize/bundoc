@@ -130,6 +130,96 @@ test("custom predicate can exclude by route prefix", async () => {
   }
 }, 10_000);
 
+test("default config folds description into the index", async () => {
+  const { manifest } = await buildDocsManifest();
+  const out = await mkdtemp(join(tmpdir(), "bundoc-search-"));
+  try {
+    const { files } = await buildSearchIndexes({
+      manifest,
+      sourceLoader: (p) => Bun.file(p).text(),
+      outDir: out,
+    });
+    const db = restoreJson(await Bun.file(files.en!).text());
+    // "freshly" appears only in project-structure.mdx's description.
+    const r = await search(db, {
+      term: "freshly",
+      properties: ["text"],
+    });
+    const routes = new Set(
+      r.hits.map((h) => (h.document as unknown as { route: string }).route),
+    );
+    expect(routes.has("/getting-started/project-structure")).toBe(true);
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+}, 10_000);
+
+test("explicit empty frontmatterFields opts out of description indexing", async () => {
+  const { manifest } = await buildDocsManifest();
+  const out = await mkdtemp(join(tmpdir(), "bundoc-search-"));
+  try {
+    const { files } = await buildSearchIndexes({
+      manifest,
+      sourceLoader: (p) => Bun.file(p).text(),
+      outDir: out,
+      frontmatterFields: [],
+    });
+    const db = restoreJson(await Bun.file(files.en!).text());
+    const r = await search(db, {
+      term: "freshly",
+      properties: ["text"],
+    });
+    expect(r.count).toBe(0);
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+}, 10_000);
+
+test("description folding applies per-locale", async () => {
+  const { manifest } = await buildDocsManifest();
+  const out = await mkdtemp(join(tmpdir(), "bundoc-search-"));
+  try {
+    const { files } = await buildSearchIndexes({
+      manifest,
+      sourceLoader: (p) => Bun.file(p).text(),
+      outDir: out,
+    });
+    const db = restoreJson(await Bun.file(files.de!).text());
+    // "Bun-natives" appears only in the German index page's description.
+    const r = await search(db, {
+      term: "Bun-natives",
+      properties: ["text"],
+    });
+    expect(r.count).toBeGreaterThan(0);
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+}, 10_000);
+
+test("extending frontmatterFields preserves description indexing", async () => {
+  const { manifest } = await buildDocsManifest();
+  const out = await mkdtemp(join(tmpdir(), "bundoc-search-"));
+  try {
+    const { files } = await buildSearchIndexes({
+      manifest,
+      sourceLoader: (p) => Bun.file(p).text(),
+      outDir: out,
+      frontmatterFields: ["description", "keywords"],
+    });
+    const db = restoreJson(await Bun.file(files.en!).text());
+    const r = await search(db, {
+      term: "freshly",
+      properties: ["text"],
+    });
+    const routes = new Set(
+      r.hits.map((h) => (h.document as unknown as { route: string }).route),
+    );
+    expect(routes.has("/getting-started/project-structure")).toBe(true);
+  } finally {
+    await rm(out, { recursive: true, force: true });
+  }
+}, 10_000);
+
 test("predicate never receives fallback rows", async () => {
   const { manifest } = await buildDocsManifest();
   const out = await mkdtemp(join(tmpdir(), "bundoc-search-"));

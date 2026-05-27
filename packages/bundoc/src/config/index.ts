@@ -56,11 +56,19 @@ export type BundocSearchConfig = {
    * Return `false` to exclude. Defaults to `defaultSearchFilter`.
    */
   filter?: (page: SearchablePage) => boolean;
+  /**
+   * Frontmatter keys whose string values (and arrays of strings) are
+   * folded into each page's indexed body text. Defaults to
+   * `['description']`. Pass an empty array to disable.
+   */
+  frontmatterFields?: readonly string[];
 };
 
 export type ResolvedSearchConfig = {
   /** Always defined — callers don't need to nullish-check. */
   filter: (page: SearchablePage) => boolean;
+  /** Always defined — callers don't need to nullish-check. */
+  frontmatterFields: readonly string[];
 };
 
 export type BundocConfig = {
@@ -188,7 +196,10 @@ export function resolveConfig(
 function resolveSearchConfig(
   raw: BundocSearchConfig | undefined,
 ): ResolvedSearchConfig {
-  return { filter: raw?.filter ?? defaultSearchFilter };
+  return {
+    filter: raw?.filter ?? defaultSearchFilter,
+    frontmatterFields: raw?.frontmatterFields ?? ["description"],
+  };
 }
 
 function resolveMdxConfig(raw: BundocMdxConfig | undefined): ResolvedMdxConfig {

@@ -38,6 +38,66 @@ test("falls back to passed title when no h1 present", () => {
   expect(doc.body).toBe("Just prose.");
 });
 
+test("folds frontmatter fields into body and first section", () => {
+  const src = `---
+title: T
+description: Inbetriebnahme der clusterize-Appliance
+---
+
+# Heading
+
+Prose without the description text.
+`;
+  const doc = extractSearchable(src, "fallback", {
+    frontmatter: { description: "Inbetriebnahme der clusterize-Appliance" },
+    frontmatterFields: ["description"],
+  });
+  expect(doc.body).toContain("Inbetriebnahme der clusterize-Appliance");
+  const h = doc.sections.find((s) => s.heading === "Heading");
+  expect(h?.text).toContain("Inbetriebnahme der clusterize-Appliance");
+});
+
+test("empty frontmatterFields is a no-op", () => {
+  const src = `---
+title: T
+description: Inbetriebnahme der clusterize-Appliance
+---
+
+# Heading
+
+Prose without the description text.
+`;
+  const doc = extractSearchable(src, "fallback", {
+    frontmatter: { description: "Inbetriebnahme der clusterize-Appliance" },
+    frontmatterFields: [],
+  });
+  expect(doc.body).not.toContain("Inbetriebnahme");
+});
+
+test("array-valued frontmatter is flattened", () => {
+  const src = `# Title
+
+Body prose.
+`;
+  const doc = extractSearchable(src, "fallback", {
+    frontmatter: { keywords: ["alpha", "beta", "gamma"] },
+    frontmatterFields: ["keywords"],
+  });
+  expect(doc.body).toContain("alpha");
+  expect(doc.body).toContain("beta");
+  expect(doc.body).toContain("gamma");
+});
+
+test("page with zero sections gets a synthetic section from frontmatter", () => {
+  const doc = extractSearchable("", "fallback", {
+    frontmatter: { description: "Lonely description" },
+    frontmatterFields: ["description"],
+  });
+  expect(doc.sections.length).toBe(1);
+  expect(doc.sections[0]?.text).toContain("Lonely description");
+  expect(doc.body).toContain("Lonely description");
+});
+
 test("strips JSX expressions", () => {
   const src = `# Hi
 

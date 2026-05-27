@@ -28,6 +28,10 @@ const processor = remark()
 export function extractSearchable(
   source: string,
   fallbackTitle: string,
+  opts?: {
+    frontmatter?: Record<string, unknown>;
+    frontmatterFields?: readonly string[];
+  },
 ): ExtractedDoc {
   const tree = processor.parse(source) as Root;
 
@@ -64,11 +68,42 @@ export function extractSearchable(
     }
   }
 
+  const fmText = collectFrontmatterText(
+    opts?.frontmatter,
+    opts?.frontmatterFields,
+  );
+  if (fmText) {
+    bodyParts.unshift(fmText);
+    if (sections[0]) {
+      sections[0].text = sections[0].text
+        ? `${fmText}\n${sections[0].text}`
+        : fmText;
+    } else {
+      sections.push({ id: "", heading: "", level: 0, text: fmText });
+    }
+  }
+
   return {
     title: title || fallbackTitle,
     sections,
     body: bodyParts.join("\n").trim(),
   };
+}
+
+function collectFrontmatterText(
+  fm: Record<string, unknown> | undefined,
+  fields: readonly string[] | undefined,
+): string {
+  if (!fm || !fields?.length) return "";
+  const out: string[] = [];
+  for (const key of fields) {
+    const v = fm[key];
+    if (typeof v === "string") out.push(v);
+    else if (Array.isArray(v)) {
+      for (const x of v) if (typeof x === "string") out.push(x);
+    }
+  }
+  return out.join(" ").trim();
 }
 
 function nodeText(node: unknown): string {

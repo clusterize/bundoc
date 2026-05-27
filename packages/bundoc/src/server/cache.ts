@@ -142,6 +142,7 @@ export async function rebuildContentCache(opts: {
     sourceLoader,
     outDir: paths.searchDir,
     filter: config.search.filter,
+    frontmatterFields: config.search.frontmatterFields,
   });
 
   return { manifest, paths, discovery };

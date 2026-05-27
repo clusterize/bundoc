@@ -54,8 +54,20 @@ export async function buildSearchIndexes(opts: {
    * `defaultSearchFilter`.
    */
   filter?: (page: SearchablePage) => boolean;
+  /**
+   * Frontmatter keys whose string values (and arrays of strings) are
+   * folded into each page's indexed body text. Defaults to
+   * `['description']`. Pass an empty array to disable.
+   */
+  frontmatterFields?: readonly string[];
 }): Promise<SearchIndexFiles> {
-  const { manifest, sourceLoader, outDir, filter = defaultSearchFilter } = opts;
+  const {
+    manifest,
+    sourceLoader,
+    outDir,
+    filter = defaultSearchFilter,
+    frontmatterFields = ["description"],
+  } = opts;
   await mkdir(outDir, { recursive: true });
 
   const files: Record<string, string> = {};
@@ -65,6 +77,7 @@ export async function buildSearchIndexes(opts: {
       locale,
       sourceLoader,
       filter,
+      frontmatterFields,
     });
     const db = create({ schema: ORAMA_SCHEMA });
     if (docs.length > 0) {
@@ -83,8 +96,9 @@ async function collectDocsForLocale(opts: {
   locale: string;
   sourceLoader: (sourcePath: string) => Promise<string>;
   filter: (page: SearchablePage) => boolean;
+  frontmatterFields: readonly string[];
 }): Promise<IndexedDoc[]> {
-  const { manifest, locale, sourceLoader, filter } = opts;
+  const { manifest, locale, sourceLoader, filter, frontmatterFields } = opts;
   const seen = new Set<string>();
   const docs: IndexedDoc[] = [];
 
@@ -112,7 +126,10 @@ async function collectDocsForLocale(opts: {
     seen.add(`${locale}::${sourcePath}`);
 
     const source = await sourceLoader(sourcePath);
-    const extracted = extractSearchable(source, entry.title);
+    const extracted = extractSearchable(source, entry.title, {
+      frontmatter: entry.frontmatter,
+      frontmatterFields,
+    });
 
     if (extracted.sections.length === 0) {
       docs.push({
