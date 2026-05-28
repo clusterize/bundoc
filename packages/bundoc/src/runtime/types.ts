@@ -42,4 +42,6 @@ export type Manifest = {
   routes: Record<string, Record<string, ManifestRouteEntry>>;
   nav: Record<string, NavNode>;
   order: Record<string, string[]>;
+  /** Optional template applied to `document.title` on navigation. `%s` is the page title. */
+  titleTemplate?: string;
 };

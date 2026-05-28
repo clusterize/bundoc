@@ -7,6 +7,7 @@ import {
   RouteMatchProvider,
 } from "./providers.tsx";
 import { RouterProvider } from "./router.tsx";
+import { TitleEffect } from "./title.ts";
 import type { Manifest } from "./types.ts";
 
 export type MountOptions = {
@@ -26,6 +27,7 @@ export function mountBundoc(opts: MountOptions): void {
       <ManifestProvider manifest={manifest}>
         <RouterProvider basePath={manifest.basePath}>
           <RouteMatchProvider>
+            <TitleEffect />
             <PageModuleProvider>
               <HashScrollEffect />
               <MdxComponentsProvider components={mdxComponents}>

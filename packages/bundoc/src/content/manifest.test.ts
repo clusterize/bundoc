@@ -137,6 +137,32 @@ test("string-shorthand _meta.json entries produce no NavNode.meta", async () => 
   expect(core.meta).toBeUndefined();
 });
 
+test("buildManifest: titleTemplate propagates when provided, omitted when not", async () => {
+  const discovery = await discoverContent({
+    contentDir,
+    locales: ["en"],
+    defaultLocale: "en",
+  });
+  const withTemplate = await buildManifest({
+    discovery,
+    contentDir,
+    locales: ["en"],
+    defaultLocale: "en",
+    basePath: "/",
+    titleTemplate: "%s — bundoc",
+  });
+  expect(withTemplate.titleTemplate).toBe("%s — bundoc");
+
+  const withoutTemplate = await buildManifest({
+    discovery,
+    contentDir,
+    locales: ["en"],
+    defaultLocale: "en",
+    basePath: "/",
+  });
+  expect(withoutTemplate.titleTemplate).toBeUndefined();
+});
+
 test("emitManifestModule: produces evaluatable JS string", async () => {
   const discovery = await discoverContent({
     contentDir,

@@ -91,6 +91,7 @@ export async function rebuildContentCache(opts: {
     locales: config.locales,
     defaultLocale: config.defaultLocale,
     basePath: config.basePath,
+    titleTemplate: config.titleTemplate,
   });
   // Swap source paths to shim paths for the manifest emission step.
   for (const byLocale of Object.values(manifest.routes)) {

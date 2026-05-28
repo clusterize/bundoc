@@ -82,6 +82,29 @@ URL prefix the site is hosted under. Stripped on incoming requests
 and re-prepended on outgoing hrefs. See
 [Routing → basePath](/guides/routing#basepath).
 
+## `titleTemplate`
+
+```ts
+titleTemplate?: string;  // default: undefined
+```
+
+Template applied to `document.title` on every navigation. The literal
+`%s` is replaced with the current page's title (frontmatter `title`
+when present, otherwise the route-derived label).
+
+```ts
+export default defineConfig({
+  locales: ["en"],
+  defaultLocale: "en",
+  titleTemplate: "%s — bundoc",
+});
+```
+
+A page whose title is `Installation` renders as
+`Installation — bundoc` in the browser tab. When omitted, bundoc
+leaves the bare title in place. Validation requires `%s` to appear at
+least once.
+
 ## `mdx.highlighting`
 
 ```ts

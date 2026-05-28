@@ -88,6 +88,13 @@ export type BundocConfig = {
   mdx?: BundocMdxConfig;
   /** Search indexing knobs. */
   search?: BundocSearchConfig;
+  /**
+   * Template for `document.title`. The literal `%s` is replaced by the
+   * current page's title on every navigation. Example:
+   * `"%s — bundoc"`. If omitted, bundoc leaves `document.title` set to
+   * the bare page title.
+   */
+  titleTemplate?: string;
 };
 
 export type ResolvedMdxConfig = {
@@ -96,7 +103,7 @@ export type ResolvedMdxConfig = {
 };
 
 export type ResolvedConfig = Required<
-  Omit<BundocConfig, "mdxComponentsEntry" | "mdx" | "search">
+  Omit<BundocConfig, "mdxComponentsEntry" | "mdx" | "search" | "titleTemplate">
 > & {
   /** Absolute path to the project root (cwd at load time). */
   rootDir: string;
@@ -110,6 +117,8 @@ export type ResolvedConfig = Required<
   mdx: ResolvedMdxConfig;
   /** Resolved search config. `filter` is always callable. */
   search: ResolvedSearchConfig;
+  /** Resolved title template (validated to contain `%s`), or undefined. */
+  titleTemplate: string | undefined;
 };
 
 /** Identity helper for type-safe config authoring. */
@@ -179,6 +188,7 @@ export function resolveConfig(
     raw.mdxComponentsEntry ?? "./theme/mdx-components.tsx",
   );
   const basePath = normaliseBasePath(raw.basePath ?? "/");
+  const titleTemplate = resolveTitleTemplate(raw.titleTemplate);
 
   return {
     locales: raw.locales,
@@ -190,7 +200,18 @@ export function resolveConfig(
     rootDir,
     mdx: resolveMdxConfig(raw.mdx),
     search: resolveSearchConfig(raw.search),
+    titleTemplate,
   };
+}
+
+function resolveTitleTemplate(raw: string | undefined): string | undefined {
+  if (raw === undefined) return undefined;
+  if (!raw.includes("%s")) {
+    throw new Error(
+      `bundoc.config: titleTemplate must contain "%s" (got ${JSON.stringify(raw)})`,
+    );
+  }
+  return raw;
 }
 
 function resolveSearchConfig(
