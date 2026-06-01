@@ -9,6 +9,9 @@ dist
 # bundoc dev cache
 .bundoc
 
+# ephemeral test fixtures (created + removed by dev-basepath.test.ts)
+.bundoc-basepath-fixture
+
 # code coverage
 coverage
 *.lcov
