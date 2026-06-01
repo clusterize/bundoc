@@ -3,5 +3,6 @@
   "meta-json": { "label": "_meta.json", "order": 1 },
   "public-assets": { "label": "Public assets", "order": 2 },
   "search": { "label": "Search", "order": 3 },
-  "roadmap": { "label": "Roadmap", "order": 4 }
+  "subpath-deployment": { "label": "Subpath deployment", "order": 4 },
+  "roadmap": { "label": "Roadmap", "order": 5 }
 }

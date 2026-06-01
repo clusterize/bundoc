@@ -1,0 +1,113 @@
+---
+title: Subpath deployment
+description: Mount bundoc under a basePath behind a reverse proxy, and keep HMR working when it shares an origin with another app.
+sidebar:
+  order: 4
+---
+
+# Subpath deployment
+
+Set `basePath` in `bundoc.config.ts` to host bundoc somewhere other than
+the site root:
+
+```ts
+export default defineConfig({
+  locales: ["en"],
+  defaultLocale: "en",
+  basePath: "/docs",
+});
+```
+
+Setting `basePath` **never forces a proxy.** `bundoc dev` and `bundoc
+build` both work when hit directly — page routes, assets, and search
+indexes are all emitted under the prefix. A reverse proxy is only needed
+when you co-locate bundoc with *another* app on the same origin.
+
+## The shared-origin HMR problem
+
+When bundoc's dev server runs behind a proxy that also fronts another
+Bun-based frontend at `/`, both apps' hot-reload machinery emits URLs at
+`/_bun/*`. The proxy can usually tell them apart by `Referer`:
+
+- HTTP requests to `/_bun/asset/*` and `/_bun/client/*` **carry
+  `Referer`** → routable by path.
+- The HMR WebSocket upgrade to `/_bun/hmr` **does not carry `Referer`**
+  (verified in Firefox). `Origin` is present but only contains
+  scheme+host — no path — so the proxy can't tell which app the socket
+  belongs to.
+
+To make the WebSocket routable, bundoc injects a tiny `<script>` at the
+top of the dev HTML shell (dev only, and only when `basePath !== "/"`)
+that monkey-patches `window.WebSocket`. When a socket URL starts with
+`/_bun/`, the patch appends `?__bundoc_app=<id>`. The proxy then routes
+the upgrade by that query param. Nothing rewrites asset URLs — the patch
+touches `WebSocket` construction only, so HTTP `/_bun/*` assets still
+route by `Referer`.
+
+This means a correct proxy config has **two** `/_bun/*` rules, not one.
+
+### The `<APP_ID>` derivation rule
+
+The query-param value is derived from `basePath` — there is no separate
+config for it. The derivation: strip leading/trailing slashes, replace
+each run of non-`[A-Za-z0-9_-]` characters with a single `-`, trim
+dashes, and lowercase. So `basePath: "/docs"` → `docs`, and
+`basePath: "/Team Docs/"` → `team-docs`. If you change `basePath`, you
+must change the matched value in your proxy too.
+
+## Caddy configuration
+
+This belongs in your reverse proxy, **not** in bundoc. Assume bundoc dev
+is reachable at `docs:4411` and the main UI at `ui:3001`:
+
+```caddy
+# WS upgrade: disambiguate by the query param the monkey-patch added.
+# The value `docs` is derived from bundoc's `basePath: "/docs"` (strip the
+# leading slash, lowercase, non-[A-Za-z0-9_-] → "-"). bundoc has no separate
+# config for it — if you change basePath, change this match value too.
+@docsBunWs {
+  path /_bun/hmr*
+  query __bundoc_app=docs
+}
+handle @docsBunWs { reverse_proxy docs:4411 }
+
+# HTTP assets/chunks: disambiguate by Referer
+@docsBunHttp {
+  path /_bun/*
+  header_regexp Referer ^https?://[^/]+/docs(/|$|\?)
+}
+handle @docsBunHttp { reverse_proxy docs:4411 }
+
+# Anything else under /_bun/* goes to the main UI
+handle /_bun/* { reverse_proxy ui:3001 }
+
+# Page traffic — strip /docs before forwarding
+handle_path /docs/* { reverse_proxy docs:4411 }
+```
+
+Keep the comment next to `@docsBunWs`: the match value comes from
+`basePath`, so a future `basePath` change has a breadcrumb instead of
+silently breaking WebSocket routing.
+
+There is no need for a `/docs/_bun/*` rule — bundoc does not rewrite the
+URLs in emitted HTML, so the browser only ever requests `/_bun/*`.
+
+## What any reverse proxy must do
+
+1. **Strip `basePath`** before forwarding page traffic to bundoc (Caddy:
+   `handle_path /docs/*`).
+2. **Route `/_bun/*` HTTP by `Referer`** to the right app.
+3. **Route `/_bun/hmr*` WebSocket by the `?__bundoc_app=<id>` query
+   param.**
+4. **Preserve `Referer` on same-origin requests.** The HTTP asset routing
+   depends on the path being present in `Referer`. The browser default,
+   `strict-origin-when-cross-origin`, satisfies this. If either app sets
+   `Referrer-Policy: no-referrer` or `origin` (which drops the path), the
+   `header_regexp Referer` rule stops matching and `/_bun/*` assets route
+   to the wrong app. No action is needed in practice — just don't harden
+   that header for these two apps.
+
+If you cannot satisfy (4) — or a future Bun release moves the HMR
+`WebSocket` call site so the monkey-patch stops intercepting — fall back
+to a proxy that rewrites `/_bun/*` per app, or run bundoc on a dedicated
+origin (subdomain) where none of this disambiguation is needed.
