@@ -9,6 +9,7 @@ import {
 } from "../content/manifest.ts";
 import { compileMdx } from "../mdx/compile.ts";
 import { buildSearchIndexes } from "../search/build-index.ts";
+import { buildHmrPatchScript } from "./hmr-patch.ts";
 
 export type CachePaths = {
   /** `.bundoc/cache/` absolute. */
@@ -230,13 +231,22 @@ mountBundoc({ manifest, ThemeApp, mdxComponents });
 
 async function writeHtml(
   config: ResolvedConfig,
-  opts: { title?: string } = {},
+  opts: { title?: string; development?: boolean } = {},
 ) {
   const paths = cachePaths(config);
   const title = opts.title ?? "bundoc";
+  // Inject the HMR WebSocket monkey-patch only in dev and only under a
+  // non-root basePath — see hmr-patch.ts. Production HTML stays clean (no
+  // HMR client to intercept), and default consumers see no change. The
+  // patch must be the first child of <head> so it runs before Bun's
+  // bundler-appended HMR client script.
+  const hmrPatch =
+    opts.development && config.basePath !== "/"
+      ? `\n    ${buildHmrPatchScript(config.basePath)}`
+      : "";
   const html = `<!doctype html>
 <html>
-  <head>
+  <head>${hmrPatch}
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${escapeHtml(title)}</title>
@@ -255,7 +265,7 @@ export async function regenerateAll(opts: {
   config: ResolvedConfig;
   development?: boolean;
 }): Promise<CachePaths> {
-  const { config } = opts;
+  const { config, development = false } = opts;
   const paths = cachePaths(config);
   await mkdir(paths.dir, { recursive: true });
   await Promise.all([
@@ -263,7 +273,7 @@ export async function regenerateAll(opts: {
     writeThemeShim(config),
     writeMdxComponentsShim(config),
     writeEntry(config),
-    writeHtml(config),
+    writeHtml(config, { development }),
   ]);
   return paths;
 }
