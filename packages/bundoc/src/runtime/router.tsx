@@ -75,6 +75,34 @@ export function RouterProvider({
   );
 }
 
+/**
+ * Router pinned to a fixed pathname, for rendering a page outside the
+ * browser URL (the PDF handbook renders every page in one document).
+ * `navigate` is a no-op.
+ */
+export function StaticRouterProvider({
+  pathname,
+  basePath,
+  children,
+}: {
+  pathname: string;
+  basePath: string;
+  children: ReactNode;
+}) {
+  const ctx: RouterCtx = {
+    pathname,
+    search: "",
+    hash: "",
+    navigate: noop,
+    basePath,
+  };
+  return (
+    <RouterContext.Provider value={ctx}>{children}</RouterContext.Provider>
+  );
+}
+
+function noop() {}
+
 export function useRouter(): RouterCtx {
   const ctx = useContext(RouterContext);
   if (!ctx) throw new Error("useRouter must be used inside <RouterProvider>");
