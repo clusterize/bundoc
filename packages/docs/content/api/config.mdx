@@ -128,6 +128,48 @@ When enabled, bundoc emits both themes via CSS variables; the
 `.dark` class on `<html>` switches the active one. Zero runtime
 bundle cost — the highlighter runs at build time.
 
+## `pdf`
+
+```ts
+pdf?: {
+  title?: string | Record<string, string>;  // default: "Documentation"
+  fileName?: string;                        // default: "handbook"
+  themeEntry?: string;                      // default: "./theme/pdf.tsx"
+  format?: "A3" | "A4" | "A5" | "Letter" | "Legal"
+         | { width: string; height: string };  // default: "A4"
+  landscape?: boolean;                      // default: false
+  margin?: { top?: string; right?: string; bottom?: string; left?: string };
+  // default: { top: "22mm", right: "18mm", bottom: "20mm", left: "18mm" }
+  cover?: boolean;                          // default: true
+  toc?: boolean;                            // default: true
+  filter?: (page: PdfablePage) => boolean;  // default: defaultPdfFilter
+};
+```
+
+Settings for [`bundoc pdf`](/guides/pdf).
+
+- `title` is passed to every PDF component and written into the PDF's
+  metadata. Give a per-locale map to translate it.
+- Lengths are CSS lengths (`"20mm"`, `"0.75in"`). The top and bottom
+  margins hold `PdfHeader` and `PdfFooter`.
+- `filter` receives `{ route, locale, title, frontmatter, fallback }`
+  for every page in every locale, including fallback rows.
+  `defaultPdfFilter` drops pages with `pdf: false` in their
+  frontmatter. Extend it the same way as the search filter.
+
+```ts
+import { defaultPdfFilter, defineConfig } from "@clusterize/bundoc/config";
+
+export default defineConfig({
+  locales: ["en", "de"],
+  defaultLocale: "en",
+  pdf: {
+    title: { en: "Handbook", de: "Handbuch" },
+    filter: (p) => defaultPdfFilter(p) && !p.route.startsWith("/internal/"),
+  },
+});
+```
+
 ## Future fields
 
 These are planned and may land in subsequent versions:

@@ -1,6 +1,6 @@
 ---
 title: CLI
-description: Commands and flags — bundoc dev, build, preview, init.
+description: Commands and flags — bundoc dev, build, preview, pdf, init.
 sidebar:
   order: 3
 ---
@@ -64,6 +64,28 @@ bunx @clusterize/bundoc preview --port 4173
 | `--host <addr>` | `localhost` | Bind address. |
 
 Useful for verifying the static build before deploying.
+
+## `bundoc pdf`
+
+Render the [PDF handbook](/guides/pdf): one file per locale.
+
+```bash
+bunx @clusterize/bundoc pdf
+bunx @clusterize/bundoc pdf --locale de
+```
+
+| Flag | Default | Notes |
+|------|---------|-------|
+| `--out <dir>` | `dist/_bundoc/pdf` | Output directory; files are `<pdf.fileName>.<locale>.pdf`. |
+| `--locale <list>` | all locales | Comma-separated subset, e.g. `en,de`. |
+
+Needs [Playwright](https://playwright.dev) and its Chromium
+(`bun add -d playwright && bunx playwright install chromium`). The
+command builds its own print bundle, so you don't need to run
+`bundoc build` first. Run it *after* `build` if the PDFs should ship
+with the site, because `build` wipes `dist/`. Set
+`BUNDOC_PDF_DEBUG=1` to keep the raw content and header/footer renders
+in `.bundoc/pdf-debug/`.
 
 ## `bundoc init`
 
