@@ -26,5 +26,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      # `bundoc pdf`'s integration test skips itself without Chromium.
+      - name: Install Chromium
+        run: bunx playwright install --with-deps chromium
+
       - name: Test
         run: bun test
