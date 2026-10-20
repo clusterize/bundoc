@@ -9,7 +9,8 @@ import { type GeneratedPdf, generatePdfs } from "../pdf/generate.ts";
 import { sectionAnchor, TOC_ANCHOR } from "../pdf/types.ts";
 
 // End-to-end `bundoc pdf` against packages/docs. Needs Playwright's
-// Chromium; skipped when it can't launch (`bunx playwright install chromium`).
+// Chromium; skipped locally when it can't launch (`bunx playwright install
+// chromium`), but fails on CI.
 
 const docsDir = resolve(import.meta.dir, "../../../docs");
 let outDir = "";
@@ -22,7 +23,9 @@ async function canLaunchChromium(): Promise<boolean> {
     const browser = await chromium.launch();
     await browser.close();
     return true;
-  } catch {
+  } catch (err) {
+    // CI installs Chromium, so a skip there means the install broke.
+    if (process.env.CI) throw err;
     return false;
   }
 }

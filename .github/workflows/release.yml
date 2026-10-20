@@ -34,9 +34,12 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      # `bundoc pdf`'s integration test skips itself without Chromium.
+      # `bundoc pdf`'s integration test skips itself without Chromium. Use the
+      # pinned Playwright (a bare `bunx` fetches the latest, whose browser
+      # build the pinned one can't launch).
       - name: Install Chromium
-        run: bunx playwright install --with-deps chromium
+        working-directory: packages/bundoc
+        run: bun run playwright install --with-deps chromium
 
       - name: Typecheck
         run: bun run typecheck
