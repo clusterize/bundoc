@@ -25,11 +25,13 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
 
+      # Trusted publishing needs npm >= 11.5.1. Pinned to a major: npm@latest
+      # moved to 12, which no longer runs on the Node this job used.
       - name: Upgrade npm to a version with trusted-publishing support
-        run: npm install -g npm@latest
+        run: npm install -g npm@11
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
