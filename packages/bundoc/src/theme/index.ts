@@ -18,5 +18,14 @@ export {
 } from "./hooks.ts";
 export type { LinkProps } from "./Link.tsx";
 export { Link } from "./Link.tsx";
+export type {
+  PdfCoverProps,
+  PdfMarginalProps,
+  PdfPageInfo,
+  PdfPageProps,
+  PdfTocEntry,
+  PdfTocProps,
+} from "./pdf.ts";
+export { usePdf } from "./pdf.ts";
 export type { SearchClient, SearchHit } from "./search.ts";
 export { useSearchIndex } from "./search.ts";

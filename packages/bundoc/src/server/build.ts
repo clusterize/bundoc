@@ -6,7 +6,7 @@ import { loadBunfigPlugins } from "./load-bunfig-plugins.ts";
 
 export async function runBuild(opts: { out: string }) {
   const config = await loadConfig();
-  const paths = await regenerateAll({ config, development: false });
+  const { paths } = await regenerateAll({ config, development: false });
   const outDir = resolve(config.rootDir, opts.out);
 
   // Wipe and recreate dist.
@@ -61,7 +61,7 @@ export async function runBuild(opts: { out: string }) {
   return { outDir, paths };
 }
 
-function joinPublicPath(basePath: string): string {
+export function joinPublicPath(basePath: string): string {
   if (basePath === "/" || basePath === "") return "/";
   return basePath.endsWith("/") ? basePath : `${basePath}/`;
 }

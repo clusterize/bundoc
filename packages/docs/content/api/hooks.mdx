@@ -18,6 +18,7 @@ import {
   useFrontmatter,
   useLink,
   useSearchIndex,
+  usePdf,
 } from "@clusterize/bundoc/theme";
 ```
 
@@ -180,3 +181,18 @@ Link to `${route}#${anchor}` to deep-link into a section.
   `query("")` returns `[]` synchronously — no network, no error. Pass
   the user's input directly without guarding.
 </Callout>
+
+## usePdf
+
+```ts
+function usePdf(): boolean;
+```
+
+`true` while rendering for [`bundoc pdf`](/guides/pdf), `false` on the
+site. Use it to render interactive components statically: accordions
+expanded, every tab shown, no copy buttons.
+
+```tsx
+const pdf = usePdf();
+return pdf ? <AllTabs tabs={tabs} /> : <Tabs tabs={tabs} />;
+```

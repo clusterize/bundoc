@@ -33,6 +33,11 @@ each member is a real package with its own `package.json`.
   - `src/search/` — plaintext extractor (MDAST) + per-locale Orama indexer.
   - `src/server/` — dev server (Bun.serve + watcher), static build
     (Bun.build), preview, cache writer.
+  - `src/pdf/` — `bundoc pdf`. `generate.ts` (Node) builds a separate
+    print app (`.bundoc/cache/pdf-entry.tsx` → `.bundoc/pdf-app/`),
+    serves it, and drives Playwright; `runtime/` is that browser app
+    (`bundoc/pdf-runtime` subpath); `finalize.ts` post-processes with
+    `pdf-lib`.
   - `src/scaffold/` — `bundoc init` templates.
 - `packages/docs/` — the public docs site AND the integration-test target.
   Doubles as the canonical example consumer of bundoc. Depends on
@@ -74,6 +79,16 @@ each member is a real package with its own `package.json`.
   no server runtime. We persist as JSON (not msgpack/binary) on purpose:
   it avoids pulling `@orama/plugin-data-persistence` + `@msgpack/msgpack`
   into the client bundle, and the wire size after gzip is comparable.
+
+- **PDF page mapping comes from Chromium's named destinations**: each
+  locale renders as ONE document (cover, TOC, one `break-before: page`
+  section per docs page). Chromium emits a named destination for every
+  `#id` that some link targets, so bundoc links every section anchor and
+  reads `/Dests` back to learn each section's start page. It then
+  re-renders until the TOC page numbers settle. Headers/footers are a
+  second, transparent render (one sheet per page) stamped on with
+  `pdf-lib`, which is why they can show per-page data like the current
+  docs page.
 
 ## Tests
 

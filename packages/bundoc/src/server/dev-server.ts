@@ -21,7 +21,7 @@ export async function startDevServer(opts: {
   config?: ResolvedConfig;
 }) {
   const config = opts.config ?? (await loadConfig());
-  const paths = await regenerateAll({ config, development: true });
+  const { paths } = await regenerateAll({ config, development: true });
 
   // Bun.serve's HTML import requires a static path; we already wrote the
   // shell to the cache. Dynamic-import it at runtime so the bundler picks

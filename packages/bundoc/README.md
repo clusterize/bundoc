@@ -209,9 +209,10 @@ as `defaultSearchFilter`, so you can extend rather than replace it.
 | `bundoc dev` | Dev server with HMR on `localhost:3000`. |
 | `bundoc build` | Static site to `dist/`. |
 | `bundoc preview` | Serve `dist/` with SPA fallback. |
+| `bundoc pdf` | PDF handbook per locale to `dist/_bundoc/pdf/` (needs Playwright). |
 | `bundoc init <dir>` | Scaffold a new project. |
 
-Flags: `--port`, `--host`, `--out`. Run `bundoc --help`.
+Flags: `--port`, `--host`, `--out`, `--locale`. Run `bundoc --help`.
 
 ### `bunfig.toml` plugins
 

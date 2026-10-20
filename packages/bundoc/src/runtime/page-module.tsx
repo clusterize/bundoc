@@ -58,6 +58,21 @@ export function PageModuleProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/** Provides an already-loaded MDX module (no lazy import). */
+export function StaticPageModuleProvider({
+  mod,
+  children,
+}: {
+  mod: MdxModule;
+  children: ReactNode;
+}) {
+  return (
+    <PageModuleContext.Provider value={{ status: "ready", mod }}>
+      {children}
+    </PageModuleContext.Provider>
+  );
+}
+
 export function usePageModule(): MdxModule | null {
   const s = useContext(PageModuleContext);
   return s?.mod ?? null;

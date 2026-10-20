@@ -71,6 +71,81 @@ export type ResolvedSearchConfig = {
   frontmatterFields: readonly string[];
 };
 
+/**
+ * One row passed to the `pdf.filter` predicate. Same shape as
+ * `SearchablePage`, but unlike search, fallback rows DO reach the
+ * predicate: a handbook for a non-default locale includes default-locale
+ * content for untranslated pages.
+ */
+export type PdfablePage = SearchablePage;
+
+/**
+ * Default PDF predicate. Honours `frontmatter.pdf !== false` — the
+ * conventional opt-out documented in `reference/frontmatter.mdx`.
+ */
+export const defaultPdfFilter = (page: PdfablePage): boolean =>
+  page.frontmatter.pdf !== false;
+
+/** Paper formats bundoc knows the dimensions of. */
+export type PdfPaperFormat = "A3" | "A4" | "A5" | "Letter" | "Legal";
+
+/** CSS length, e.g. `"20mm"`, `"0.75in"`, `"48px"`. */
+export type CssLength = string;
+
+export type BundocPdfConfig = {
+  /**
+   * Handbook title, passed to the cover, TOC, header and footer and
+   * written into the PDF metadata. Either one string for every locale
+   * or a per-locale map. Default: `"Documentation"`.
+   */
+  title?: string | Record<string, string>;
+  /** Output filename stem; files are `<fileName>.<locale>.pdf`. Default: `handbook`. */
+  fileName?: string;
+  /** Path to the PDF theme module (exports `PdfCover`, `PdfHeader`, …). Default: `./theme/pdf.tsx`. */
+  themeEntry?: string;
+  /** Paper format or explicit page size. Default: `A4`. */
+  format?: PdfPaperFormat | { width: CssLength; height: CssLength };
+  /** Rotate the paper format. Default: `false`. */
+  landscape?: boolean;
+  /**
+   * Page margins. The top and bottom margins are where `PdfHeader` and
+   * `PdfFooter` render. Default: `{ top: "22mm", right: "18mm", bottom: "20mm", left: "18mm" }`.
+   */
+  margin?: {
+    top?: CssLength;
+    right?: CssLength;
+    bottom?: CssLength;
+    left?: CssLength;
+  };
+  /** Render a cover page. Default: `true`. */
+  cover?: boolean;
+  /** Render a table of contents after the cover. Default: `true`. */
+  toc?: boolean;
+  /**
+   * Predicate applied to every (route, locale) pair. Return `false` to
+   * leave the page out of the handbook. Defaults to `defaultPdfFilter`.
+   */
+  filter?: (page: PdfablePage) => boolean;
+};
+
+export type ResolvedPdfConfig = {
+  title: Record<string, string>;
+  fileName: string;
+  /** Absolute path; the file may not exist (bundoc then uses built-in defaults). */
+  themeEntry: string;
+  /** Page size as CSS lengths, landscape already applied. */
+  paper: { width: CssLength; height: CssLength };
+  margin: {
+    top: CssLength;
+    right: CssLength;
+    bottom: CssLength;
+    left: CssLength;
+  };
+  cover: boolean;
+  toc: boolean;
+  filter: (page: PdfablePage) => boolean;
+};
+
 export type BundocConfig = {
   /** Available locales (BCP-47 codes; bundoc treats them as opaque strings). */
   locales: string[];
@@ -95,6 +170,8 @@ export type BundocConfig = {
    * the bare page title.
    */
   titleTemplate?: string;
+  /** `bundoc pdf` handbook settings. */
+  pdf?: BundocPdfConfig;
 };
 
 export type ResolvedMdxConfig = {
@@ -103,7 +180,10 @@ export type ResolvedMdxConfig = {
 };
 
 export type ResolvedConfig = Required<
-  Omit<BundocConfig, "mdxComponentsEntry" | "mdx" | "search" | "titleTemplate">
+  Omit<
+    BundocConfig,
+    "mdxComponentsEntry" | "mdx" | "search" | "titleTemplate" | "pdf"
+  >
 > & {
   /** Absolute path to the project root (cwd at load time). */
   rootDir: string;
@@ -119,6 +199,8 @@ export type ResolvedConfig = Required<
   search: ResolvedSearchConfig;
   /** Resolved title template (validated to contain `%s`), or undefined. */
   titleTemplate: string | undefined;
+  /** Resolved `bundoc pdf` config. */
+  pdf: ResolvedPdfConfig;
 };
 
 /** Identity helper for type-safe config authoring. */
@@ -201,6 +283,7 @@ export function resolveConfig(
     mdx: resolveMdxConfig(raw.mdx),
     search: resolveSearchConfig(raw.search),
     titleTemplate,
+    pdf: resolvePdfConfig(raw.pdf, rootDir, raw.locales),
   };
 }
 
@@ -220,6 +303,55 @@ function resolveSearchConfig(
   return {
     filter: raw?.filter ?? defaultSearchFilter,
     frontmatterFields: raw?.frontmatterFields ?? ["description"],
+  };
+}
+
+const PAPER_SIZES: Record<PdfPaperFormat, { width: string; height: string }> = {
+  A3: { width: "297mm", height: "420mm" },
+  A4: { width: "210mm", height: "297mm" },
+  A5: { width: "148mm", height: "210mm" },
+  Letter: { width: "8.5in", height: "11in" },
+  Legal: { width: "8.5in", height: "14in" },
+};
+
+function resolvePdfConfig(
+  raw: BundocPdfConfig | undefined,
+  rootDir: string,
+  locales: string[],
+): ResolvedPdfConfig {
+  const format = raw?.format ?? "A4";
+  const size = typeof format === "string" ? PAPER_SIZES[format] : format;
+  if (!size) {
+    throw new Error(
+      `bundoc.config: unknown pdf.format ${JSON.stringify(format)} (expected one of ${Object.keys(PAPER_SIZES).join(", ")} or { width, height })`,
+    );
+  }
+  const paper = raw?.landscape
+    ? { width: size.height, height: size.width }
+    : { ...size };
+  const rawTitle = raw?.title ?? "Documentation";
+  const title = Object.fromEntries(
+    locales.map((l) => [
+      l,
+      typeof rawTitle === "string"
+        ? rawTitle
+        : (rawTitle[l] ?? Object.values(rawTitle)[0] ?? "Documentation"),
+    ]),
+  );
+  return {
+    title,
+    fileName: raw?.fileName ?? "handbook",
+    themeEntry: resolve(rootDir, raw?.themeEntry ?? "./theme/pdf.tsx"),
+    paper,
+    margin: {
+      top: raw?.margin?.top ?? "22mm",
+      right: raw?.margin?.right ?? "18mm",
+      bottom: raw?.margin?.bottom ?? "20mm",
+      left: raw?.margin?.left ?? "18mm",
+    },
+    cover: raw?.cover ?? true,
+    toc: raw?.toc ?? true,
+    filter: raw?.filter ?? defaultPdfFilter,
   };
 }
 

@@ -11,6 +11,7 @@ Commands:
   dev       Start dev server with HMR
   build     Build a static site to dist/
   preview   Serve a previously built dist/
+  pdf       Render a PDF handbook per locale (needs Playwright)
   init      Scaffold a new bundoc site
 
 Options:
@@ -98,6 +99,17 @@ async function main() {
         out: typeof flags.out === "string" ? flags.out : "dist",
         port: typeof flags.port === "string" ? Number(flags.port) : 4173,
         host: typeof flags.host === "string" ? flags.host : "localhost",
+      });
+      return;
+    }
+    case "pdf": {
+      const { runPdf } = await import("./pdf.ts");
+      await runPdf({
+        out: typeof flags.out === "string" ? flags.out : "dist/_bundoc/pdf",
+        locales:
+          typeof flags.locale === "string"
+            ? flags.locale.split(",").map((l) => l.trim())
+            : undefined,
       });
       return;
     }

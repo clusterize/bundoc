@@ -1,3 +1,4 @@
+import { usePdf } from "@clusterize/bundoc/theme";
 import { Children, isValidElement, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { CopyButton } from "./CopyButton";
@@ -31,8 +32,10 @@ export function Pre({
   ...rest
 }: PreProps) {
   const code = extractText(children);
+  // No copy button in the PDF handbook, and no clipping: long lines wrap.
+  const pdf = usePdf();
   return (
-    <div className="group relative my-5 overflow-hidden rounded-lg border border-border bg-muted/30">
+    <div className="group relative my-5 overflow-hidden break-inside-avoid rounded-lg border border-border bg-muted/30">
       {title ? (
         <div className="flex items-center justify-between border-b border-border bg-muted/50 px-4 py-1.5 text-xs">
           <span className="font-mono text-muted-foreground">{title}</span>
@@ -47,12 +50,13 @@ export function Pre({
         {...rest}
         className={cn(
           "!my-0 overflow-x-auto !rounded-none !border-0 !bg-transparent px-4 py-3 text-sm leading-6",
+          pdf && "whitespace-pre-wrap break-words",
           className,
         )}
       >
         {children}
       </pre>
-      <CopyButton value={code} />
+      {pdf ? null : <CopyButton value={code} />}
     </div>
   );
 }

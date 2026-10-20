@@ -1,0 +1,171 @@
+---
+title: PDF handbook
+description: Render the docs as one PDF per locale with cover, table of contents, headers and footers.
+sidebar:
+  order: 8
+---
+
+# PDF handbook
+
+`bundoc pdf` renders the whole site as a printable handbook: one PDF
+per locale, with a cover, a clickable table of contents, and a header
+and footer on every page. Your theme renders all of it, the same way
+it renders the site.
+
+```bash
+bun add -d playwright
+bunx playwright install chromium
+bunx @clusterize/bundoc pdf
+```
+
+Output lands in `dist/_bundoc/pdf/handbook.<locale>.pdf`. Run it after
+`bundoc build` if the site should link to the files (`build` wipes
+`dist/`).
+
+## What's in the PDF
+
+<Steps>
+  <Step>
+    **Cover.** A full page with no margins, rendered by `PdfCover`.
+  </Step>
+  <Step>
+    **Table of contents.** Built from the nav tree (folder structure plus
+    `_meta.json` order and labels). Each entry links to its page and shows
+    its page number.
+  </Step>
+  <Step>
+    **One section per docs page, in nav order.** Every docs page starts
+    on a new PDF page. Long pages run over several PDF pages, but two
+    docs pages never share one.
+  </Step>
+</Steps>
+
+On top of that:
+- **Header and footer** on every page, with the page number, total
+  page count and the current docs page.
+- **Bookmarks** (the PDF outline) mirroring the table of contents.
+- **Working links.** Links between docs pages, including links to
+  headings, jump inside the PDF. External links stay links. Links to
+  pages that aren't in the handbook become plain text.
+
+Every configured locale gets its own handbook. Pages without a
+translation fall back to the default locale, just like on the site.
+`page.fallback` tells your components when that happens.
+
+## Theme components
+
+Put the PDF components in `theme/pdf.tsx` (change the path with
+[`pdf.themeEntry`](/api/config#pdf)). Every export is optional; anything
+you leave out uses bundoc's plain built-in version.
+
+```tsx title="theme/pdf.tsx"
+import type {
+  PdfCoverProps,
+  PdfMarginalProps,
+  PdfPageProps,
+  PdfTocProps,
+} from "@clusterize/bundoc/theme";
+// The site's theme entry isn't loaded for the PDF. Import your CSS here.
+import "./styles.css";
+
+export function PdfCover({ title, generatedAt, locale }: PdfCoverProps) {
+  return <h1>{title}</h1>;
+}
+
+export function PdfToc({ entries }: PdfTocProps) {
+  // entries: { label, href, pageNumber, depth, page, children }[]
+  return null;
+}
+
+export function PdfPage({ page, children }: PdfPageProps) {
+  return <article className="prose">{children}</article>;
+}
+
+export function PdfHeader({ kind, page, title }: PdfMarginalProps) {
+  if (kind === "cover") return null;
+  return <span>{page?.title ?? title}</span>;
+}
+
+export function PdfFooter({ kind, pageNumber, totalPages }: PdfMarginalProps) {
+  if (kind === "cover") return null;
+  return <span>{pageNumber} / {totalPages}</span>;
+}
+```
+
+| Export | Renders | Props |
+|--------|---------|-------|
+| `PdfCover` | the cover page, full bleed | `title`, `locale`, `generatedAt` |
+| `PdfToc` | the table of contents | `title`, `locale`, `entries` |
+| `PdfPage` | the wrapper around each docs page | `page`, `children` (the MDX content) |
+| `PdfHeader` | the top margin of every PDF page | see below |
+| `PdfFooter` | the bottom margin of every PDF page | see below |
+
+`PdfHeader` and `PdfFooter` receive `pageNumber`, `totalPages`,
+`title`, `locale` and `kind` (`"cover"`, `"toc"` or `"page"`). On
+content pages they also get `page`, the docs page shown there. `page`
+has `title`, `route`, `breadcrumbs` (the nav groups above it),
+`frontmatter` and `fallback`. Each one renders into a box the size of
+its page margin (full page width, padded by the left and right
+margins). They're ordinary React components with your theme's CSS, so
+logos, SVGs and web fonts all work.
+
+Inside `PdfPage`, `PdfCover`, `PdfToc` and the marginals, the usual
+hooks work (`useCurrentPage`, `useLocale`, `useFrontmatter`, …). Each
+docs page is rendered as if it were the current route.
+
+### Interactive components
+
+The PDF is rendered with `print` media and `data-bundoc-pdf` set on
+`<html>`, so CSS alone can handle a lot:
+
+```css
+@media print {
+  .copy-button { display: none; }
+}
+```
+
+CSS can't show content that isn't in the DOM, though. Collapsed
+accordions and inactive tabs usually aren't. For those, ask
+`usePdf()` and render the static version:
+
+```tsx
+import { usePdf } from "@clusterize/bundoc/theme";
+
+export function Accordion({ title, children }) {
+  const pdf = usePdf();
+  if (pdf) return <section><h4>{title}</h4>{children}</section>;
+  return <Collapsible title={title}>{children}</Collapsible>;
+}
+```
+
+The handbook is always light mode: bundoc emulates
+`prefers-color-scheme: light` and never sets `.dark`.
+
+## Page layout
+
+Paper and margins come from [`pdf`](/api/config#pdf) in
+`bundoc.config.ts`. The default is A4 with 22 mm / 18 mm / 20 mm /
+18 mm margins (top, right, bottom, left). The top and bottom margins
+are where the header and footer go, so make them tall enough.
+
+Responsive styles see the page's content width (about 175 mm on A4),
+so `sm:` breakpoints apply but `lg:` ones don't.
+
+bundoc's own print CSS keeps headings with the content that follows
+them and avoids breaking inside images, figures and table rows. Add
+`break-inside: avoid` to your own blocks (code samples, callouts) where
+a split would hurt.
+
+## Leaving pages out
+
+Set `pdf: false` in a page's frontmatter:
+
+```mdx
+---
+title: Changelog
+pdf: false
+---
+```
+
+For anything more involved, pass a [`pdf.filter`](/api/config#pdf)
+predicate.
